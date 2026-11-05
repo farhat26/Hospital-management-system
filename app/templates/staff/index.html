@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Hospital Staff & Personnel - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Hospital Staff & Personnel</h3>
+    <p class="text-muted small mb-0">Nursing officers, administrative personnel, duty shifts, and attendance logs</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('staff.shifts') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+      <i class="bi bi-clock-history me-1"></i> Duty Shifts
+    </a>
+    <a href="{{ url_for('staff.attendance') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-calendar-check me-1"></i> Attendance
+    </a>
+    <a href="{{ url_for('staff.create_nurse') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-person-plus me-1"></i> Add Nurse
+    </a>
+    <a href="{{ url_for('staff.create_staff') }}" class="btn btn-teal btn-sm fw-semibold">
+      <i class="bi bi-person-badge me-1"></i> Add General Staff
+    </a>
+  </div>
+</div>
+
+<!-- Tabs: Nurses vs Staff -->
+<ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm border" id="staffTabs" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active fw-medium" id="nurses-tab" data-bs-toggle="tab" data-bs-target="#nurses" type="button" role="tab">
+      <i class="bi bi-person-hearts me-1"></i> Nursing Officers ({{ nurses|length }})
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="staff-tab" data-bs-toggle="tab" data-bs-target="#generalStaff" type="button" role="tab">
+      <i class="bi bi-people me-1"></i> Administrative & Support Personnel ({{ general_staff|length }})
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="staffTabsContent">
+  <!-- Nurses Tab -->
+  <div class="tab-pane fade show active" id="nurses" role="tabpanel">
+    <div class="content-card">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Nurse Code</th>
+              <th>Full Name</th>
+              <th>Department</th>
+              <th>License #</th>
+              <th>Qualifications</th>
+              <th>Phone</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in nurses %}
+            <tr>
+              <td class="fw-bold text-primary">{{ n.nurse_code }}</td>
+              <td class="fw-semibold">{{ n.full_name }}</td>
+              <td><span class="badge bg-primary-subtle text-primary border">{{ n.department.name }}</span></td>
+              <td><code>{{ n.license_number }}</code></td>
+              <td>{{ n.qualification }}</td>
+              <td>{{ n.phone }}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('staff.edit_nurse', id=n.id) }}" class="btn btn-outline-primary btn-action-icon" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('staff.delete_nurse', id=n.id) }}" data-record-name="{{ n.full_name }}" title="Soft Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center py-4 text-muted">No nursing staff registered yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Staff Tab -->
+  <div class="tab-pane fade" id="generalStaff" role="tabpanel">
+    <div class="content-card">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Staff Code</th>
+              <th>Full Name</th>
+              <th>Designation / Role</th>
+              <th>Department</th>
+              <th>Phone</th>
+              <th>Hire Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in general_staff %}
+            <tr>
+              <td class="fw-bold text-teal"><code>{{ s.staff_code }}</code></td>
+              <td class="fw-semibold">{{ s.full_name }}</td>
+              <td><span class="badge bg-light text-dark border">{{ s.role_title }}</span></td>
+              <td>{{ s.department.name if s.department else 'General Administration' }}</td>
+              <td>{{ s.phone }}</td>
+              <td>{{ s.hire_date.strftime('%b %d, %Y') }}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('staff.edit_staff', id=s.id) }}" class="btn btn-outline-primary btn-action-icon" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('staff.delete_staff', id=s.id) }}" data-record-name="{{ s.full_name }}" title="Soft Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center py-4 text-muted">No general staff registered.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

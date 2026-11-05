@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Encounter {{ visit.visit_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ visit.visit_number }}</h3>
+      <span class="badge bg-primary-subtle text-primary border px-2.5 py-1">{{ visit.visit_type }}</span>
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      Encounter Date: {{ visit.visit_date.strftime('%B %d, %Y at %H:%M') }} &bull; Doctor: <strong>{{ visit.doctor.full_name }}</strong>
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('appointments.visits') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Visits
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Vitals & Notes Card -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-activity text-danger me-2"></i>Recorded Vital Signs & Examination</h6>
+      </div>
+      <div class="content-card-body">
+        <div class="row g-3 mb-4 text-center">
+          <div class="col-sm-4 col-6">
+            <div class="p-3 bg-light rounded-3">
+              <small class="text-muted d-block">Blood Pressure</small>
+              <span class="fs-5 fw-bold text-slate">{{ visit.systolic_bp or '--' }}/{{ visit.diastolic_bp or '--' }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">mmHg</small></span>
+            </div>
+          </div>
+          <div class="col-sm-4 col-6">
+            <div class="p-3 bg-light rounded-3">
+              <small class="text-muted d-block">Heart Rate</small>
+              <span class="fs-5 fw-bold text-danger">{{ visit.heart_rate or '--' }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">bpm</small></span>
+            </div>
+          </div>
+          <div class="col-sm-4 col-6">
+            <div class="p-3 bg-light rounded-3">
+              <small class="text-muted d-block">Temperature</small>
+              <span class="fs-5 fw-bold text-warning">{{ visit.temperature or '--' }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">°F</small></span>
+            </div>
+          </div>
+          <div class="col-sm-4 col-6">
+            <div class="p-3 bg-light rounded-3">
+              <small class="text-muted d-block">Weight</small>
+              <span class="fs-5 fw-bold text-slate">{{ visit.weight_kg or '--' }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">kg</small></span>
+            </div>
+          </div>
+          <div class="col-sm-4 col-6">
+            <div class="p-3 bg-light rounded-3">
+              <small class="text-muted d-block">Height</small>
+              <span class="fs-5 fw-bold text-slate">{{ visit.height_cm or '--' }} <small class="fw-normal text-muted" style="font-size: 0.75rem;">cm</small></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <h6 class="fw-bold text-slate">Reported Symptoms:</h6>
+          <p class="p-3 bg-light rounded-3 mb-0">{{ visit.symptoms or 'No reported symptoms noted.' }}</p>
+        </div>
+
+        <div>
+          <h6 class="fw-bold text-slate">Physician Clinical Findings & Impression:</h6>
+          <p class="p-3 bg-light rounded-3 mb-0">{{ visit.clinical_notes or 'No clinical remarks recorded.' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assigned Diagnoses -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clipboard2-pulse text-primary me-2"></i>Assigned Diagnoses ({{ visit.visit_diagnoses|length }})</h6>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addDiagnosisModal">+ Add Diagnosis</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>ICD-10 Code</th>
+              <th>Diagnosis Name</th>
+              <th>Type</th>
+              <th>Clinical Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for vd in visit.visit_diagnoses %}
+            <tr>
+              <td class="fw-bold text-primary"><code>{{ vd.diagnosis.icd_code }}</code></td>
+              <td>{{ vd.diagnosis.diagnosis_name }}</td>
+              <td><span class="badge bg-light text-dark border">{{ vd.diagnosis_type }}</span></td>
+              <td>{{ vd.notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center py-3 text-muted">No diagnoses assigned to this visit encounter yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Patient Card -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-person text-primary me-2"></i>Patient Profile</h6>
+      </div>
+      <div class="content-card-body p-3">
+        <h5 class="fw-bold mb-1"><a href="{{ url_for('patients.view', id=visit.patient.id) }}">{{ visit.patient.full_name }}</a></h5>
+        <div class="text-muted small mb-2">{{ visit.patient.patient_code }} &bull; {{ visit.patient.age }} yrs &bull; {{ visit.patient.gender }}</div>
+        <div class="small">Blood Group: <strong class="text-danger">{{ visit.patient.blood_group or 'N/A' }}</strong></div>
+      </div>
+    </div>
+
+    <!-- Prescriptions Issued in Visit -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-capsule text-teal me-2"></i>Prescriptions</h6>
+        <a href="{{ url_for('pharmacy.create_prescription') }}" class="btn btn-sm btn-outline-teal py-0">+ New Rx</a>
+      </div>
+      <div class="content-card-body p-3">
+        {% for rx in visit.prescriptions %}
+        <div class="mb-2 pb-2 border-bottom">
+          <div class="fw-bold"><a href="{{ url_for('pharmacy.view_prescription', id=rx.id) }}">{{ rx.prescription_code }}</a></div>
+          <small class="text-muted">{{ rx.items|length }} medicines charted</small>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No prescriptions linked to this encounter.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Diagnosis to Visit -->
+<div class="modal fade" id="addDiagnosisModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('appointments.add_visit_diagnosis', id=visit.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Assign ICD Diagnosis</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Select ICD-10 Diagnosis <span class="text-danger">*</span></label>
+            {{ diag_form.diagnosis_id(class="form-select") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Diagnosis Type</label>
+            {{ diag_form.diagnosis_type(class="form-select") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Clinical Remarks</label>
+            {{ diag_form.notes(class="form-control", rows=2) }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign Diagnosis</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Nursing Station & Inpatient Care - Hospital Management System{% endblock %}
+
+{% block content %}
+<!-- Nurse Welcome Banner -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 60px; height: 60px;">
+        <i class="bi bi-heart-pulse-fill"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h3 class="fw-bold mb-0 text-slate">{{ nurse.full_name if nurse else current_user.username }}</h3>
+          <span class="badge bg-success-subtle text-success border px-2.5 py-1">Nursing Station</span>
+        </div>
+        <p class="text-muted small mb-0 mt-1">
+          {% if nurse %}
+          {{ nurse.qualification }} &bull; License: <strong>{{ nurse.license_number }}</strong> &bull; Dept: <strong>{{ nurse.department.name if nurse.department else 'General Inpatient' }}</strong>
+          {% else %}
+          Inpatient Care & Vitals Station
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('wards.create_admission') }}" class="btn btn-primary btn-sm fw-semibold">
+        <i class="bi bi-box-arrow-in-right me-1"></i> Admit Patient
+      </a>
+      <a href="{{ url_for('wards.index') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+        <i class="bi bi-hospital me-1"></i> Ward Bed Grid
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Nurse KPI Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Admitted Inpatients</div>
+          <div class="stat-value text-primary">{{ active_admissions_count }}</div>
+          <small class="text-muted">Under Active Bed Care</small>
+        </div>
+        <div class="stat-icon bg-primary-subtle text-primary">
+          <i class="bi bi-person-fill-exclamation"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Occupied Beds</div>
+          <div class="stat-value text-danger">{{ occupied_beds_count }}</div>
+          <small class="text-muted">Inpatient Occupancy</small>
+        </div>
+        <div class="stat-icon bg-danger-subtle text-danger">
+          <i class="bi bi-hospital-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Available Clean Beds</div>
+          <div class="stat-value text-success">{{ available_beds_count }}</div>
+          <small class="text-muted">Ready for Admission</small>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Total Ward Beds</div>
+          <div class="stat-value text-teal">{{ total_beds_count }}</div>
+          <small class="text-muted">Across {{ wards_list|length }} Hospital Wards</small>
+        </div>
+        <div class="stat-icon bg-teal-subtle text-teal">
+          <i class="bi bi-building-check"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Current Admitted Inpatients Table -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-person-lines-fill text-primary me-2"></i>Current Admitted Inpatients Roster</h6>
+        <a href="{{ url_for('wards.admissions') }}" class="btn btn-sm btn-outline-primary py-0">All Admissions</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Adm #</th>
+              <th>Patient</th>
+              <th>Attending Doctor</th>
+              <th>Admitted Date</th>
+              <th>Status</th>
+              <th class="text-end">Nursing Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for adm in active_admissions %}
+            <tr>
+              <td>
+                <a href="{{ url_for('wards.view_admission', id=adm.id) }}" class="fw-bold">{{ adm.admission_number }}</a>
+              </td>
+              <td>
+                <div class="fw-bold text-dark">{{ adm.patient.full_name }}</div>
+                <small class="text-muted">{{ adm.patient.patient_code }} &bull; {{ adm.patient.gender }}</small>
+              </td>
+              <td>{{ adm.doctor.full_name }}</td>
+              <td><small class="text-muted">{{ adm.admission_date.strftime('%b %d, %Y') }}</small></td>
+              <td>
+                <span class="badge bg-success-subtle text-success border">Admitted</span>
+              </td>
+              <td class="text-end">
+                <a href="{{ url_for('appointments.create_visit', patient_id=adm.patient_id) }}" class="btn btn-sm btn-outline-primary py-0">
+                  <i class="bi bi-heart-pulse me-1"></i> Record Vitals
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No inpatients currently admitted.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ward Bed Occupancy Chart -->
+  <div class="col-lg-4">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-bar-chart text-teal me-2"></i>Beds Occupied by Ward</h6>
+      </div>
+      <div class="content-card-body d-flex align-items-center justify-content-center" style="min-height: 260px;">
+        <canvas id="wardOccupancyChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Wards Status Overview & Recent Vitals -->
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-hospital text-indigo me-2"></i>Inpatient Wards & Units</h6>
+        <a href="{{ url_for('wards.index') }}" class="btn btn-sm btn-outline-secondary py-0">Open Bed Grid</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Ward Name</th>
+              <th>Type</th>
+              <th>Floor</th>
+              <th>Capacity</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for w in wards_list %}
+            <tr>
+              <td class="fw-bold"><a href="{{ url_for('wards.view_ward', id=w.id) }}">{{ w.ward_name }}</a></td>
+              <td><span class="badge bg-light text-dark border">{{ w.ward_type }}</span></td>
+              <td>Floor {{ w.floor_number or 1 }}</td>
+              <td>{{ w.total_capacity }} beds</td>
+              <td class="text-end">
+                <a href="{{ url_for('wards.view_ward', id=w.id) }}" class="btn btn-sm btn-outline-primary py-0">Inspect</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No wards defined in hospital.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-activity text-success me-2"></i>Recently Recorded Vitals</h6>
+        <a href="{{ url_for('appointments.visits') }}" class="btn btn-sm btn-outline-secondary py-0">All Visits</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>BP (mmHg)</th>
+              <th>Pulse</th>
+              <th>Temp</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in recent_vitals_visits %}
+            <tr>
+              <td class="fw-semibold"><a href="{{ url_for('patients.view', id=v.patient_id) }}">{{ v.patient.full_name }}</a></td>
+              <td><span class="badge bg-light text-dark border">{{ v.systolic_bp }}/{{ v.diastolic_bp }}</span></td>
+              <td>{{ v.heart_rate or '-' }} bpm</td>
+              <td>{{ v.temperature or '-' }}°F</td>
+              <td><small class="text-muted">{{ v.visit_date.strftime('%b %d, %H:%M') }}</small></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No recent patient vitals recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('wardOccupancyChart');
+    if (ctx && window.Chart) {
+      const dataArr = {{ ward_occupancy_data|tojson }};
+      const labels = dataArr.map(d => d[0]);
+      const values = dataArr.map(d => d[1]);
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['ICU', 'CCU', 'General Ward', 'Pediatrics'],
+          datasets: [{
+            label: 'Occupied Beds',
+            data: values.length ? values : [2, 1, 3, 1],
+            backgroundColor: '#059669',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

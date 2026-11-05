@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0 text-slate">{{ title }}</h3>
+      <a href="{{ url_for('billing.insurance') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Insurance
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.provider_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.provider_name(class="form-control", placeholder="e.g. State Life Health Care, Jubilee Life") }}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.policy_type.label.text }}</label>
+              {{ form.policy_type(class="form-select") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.co_pay_percentage.label.text }} <span class="text-danger">*</span></label>
+              {{ form.co_pay_percentage(class="form-control", placeholder="10.0") }}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.contact_person.label.text }}</label>
+              {{ form.contact_person(class="form-control", placeholder="Claims Manager Name") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.phone.label.text }} <span class="text-danger">*</span></label>
+              {{ form.phone(class="form-control", placeholder="+92 21 111-222-333") }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.email.label.text }}</label>
+            {{ form.email(class="form-control", placeholder="claims@insurance.com") }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.claim_address.label.text }}</label>
+            {{ form.claim_address(class="form-control", placeholder="Office tower, street, city") }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <a href="{{ url_for('billing.insurance') }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold"><i class="bi bi-save me-1"></i>Save Provider</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

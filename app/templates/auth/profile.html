@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-4 mb-4">
+    <!-- User Overview Card -->
+    <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+      <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; font-weight: 700;">
+        {{ current_user.username[0]|upper }}
+      </div>
+      <h4 class="fw-bold mb-1">{{ current_user.profile.full_name if current_user.profile else current_user.username }}</h4>
+      <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>{{ current_user.email }}</p>
+      <div>
+        <span class="badge bg-primary-subtle text-primary border px-3 py-1.5 fw-semibold">{{ current_user.role.name }}</span>
+      </div>
+
+      <hr class="my-4">
+      <div class="text-start" style="font-size: 0.85rem;">
+        <div class="mb-2"><strong class="text-muted">Username:</strong> {{ current_user.username }}</div>
+        <div class="mb-2"><strong class="text-muted">Account Status:</strong> <span class="badge bg-success-subtle text-success">Active</span></div>
+        <div class="mb-2"><strong class="text-muted">Member Since:</strong> {{ current_user.created_at.strftime('%b %d, %Y') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <!-- Edit Profile Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-person-gear text-primary me-2"></i>Edit Profile Information</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="submit_profile" value="1">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.first_name.label.text }}</label>
+              {{ form.first_name(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.last_name.label.text }}</label>
+              {{ form.last_name(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.phone.label.text }}</label>
+              {{ form.phone(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.national_id.label.text }}</label>
+              {{ form.national_id(class="form-control") }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.address.label.text }}</label>
+              {{ form.address(class="form-control") }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.bio.label.text }}</label>
+              {{ form.bio(class="form-control", rows=3) }}
+            </div>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold"><i class="bi bi-check2 me-1"></i>Save Profile Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Change Password Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-shield-lock text-primary me-2"></i>Change Security Password</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('auth.change_password') }}">
+          {{ pwd_form.hidden_tag() }}
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">{{ pwd_form.current_password.label.text }}</label>
+              {{ pwd_form.current_password(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ pwd_form.new_password.label.text }}</label>
+              {{ pwd_form.new_password(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ pwd_form.confirm_password.label.text }}</label>
+              {{ pwd_form.confirm_password(class="form-control") }}
+            </div>
+          </div>
+
+          <div class="text-end mt-4">
+            <button type="submit" class="btn btn-outline-danger fw-semibold"><i class="bi bi-key me-1"></i>Update Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

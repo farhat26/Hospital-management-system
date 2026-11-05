@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0 text-slate">{{ title }}</h3>
+      <a href="{{ url_for('surgery.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Surgery
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.surgery_code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.surgery_code(class="form-control", placeholder="e.g. SURG-CARD-02") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.surgery_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.surgery_name(class="form-control", placeholder="e.g. Total Knee Replacement") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.department_id.label.text }} <span class="text-danger">*</span></label>
+            {{ form.department_id(class="form-select") }}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.estimated_duration_minutes.label.text }} <span class="text-danger">*</span></label>
+              {{ form.estimated_duration_minutes(class="form-control", placeholder="90") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.standard_cost.label.text }} <span class="text-danger">*</span></label>
+              {{ form.standard_cost(class="form-control", placeholder="120000.00") }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=3, placeholder="Surgical steps, indications, protocol") }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <a href="{{ url_for('surgery.index') }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold"><i class="bi bi-save me-1"></i>Save Procedure</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

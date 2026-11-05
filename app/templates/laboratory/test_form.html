@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Diagnostic Test - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0 text-slate">Edit Diagnostic Test: {{ test.test_name }}</h3>
+      <a href="{{ url_for('laboratory.tests') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Tests
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.test_code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.test_code(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.test_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.test_name(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.category.label.text }}</label>
+            {{ form.category(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.cost.label.text }} <span class="text-danger">*</span></label>
+            {{ form.cost(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.normal_range.label.text }}</label>
+            {{ form.normal_range(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.unit_of_measure.label.text }}</label>
+            {{ form.unit_of_measure(class="form-control") }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=2) }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <a href="{{ url_for('laboratory.tests') }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Update Test</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

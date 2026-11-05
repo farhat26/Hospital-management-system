@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Diagnostic Pathology & Laboratory - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Pathology & Clinical Laboratory</h3>
+    <p class="text-muted small mb-0">Diagnostic requisitions, specimens, abnormal result flags, and validation</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('laboratory.tests') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+      <i class="bi bi-clipboard2-data me-1"></i> Tests Catalog ({{ total_tests }})
+    </a>
+    <a href="{{ url_for('laboratory.create_order') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-eyedropper me-1"></i> New Requisition
+    </a>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <form method="GET" action="{{ url_for('laboratory.index') }}" class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <select name="priority" class="form-select">
+          <option value="">-- All Requisition Priorities --</option>
+          <option value="Routine" {% if selected_priority == 'Routine' %}selected{% endif %}>Routine</option>
+          <option value="Urgent" {% if selected_priority == 'Urgent' %}selected{% endif %}>Urgent</option>
+          <option value="STAT" {% if selected_priority == 'STAT' %}selected{% endif %}>STAT (Emergency / Critical)</option>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <select name="status" class="form-select">
+          <option value="">-- All Order Statuses --</option>
+          <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending</option>
+          <option value="Sample Collected" {% if selected_status == 'Sample Collected' %}selected{% endif %}>Sample Collected</option>
+          <option value="In Process" {% if selected_status == 'In Process' %}selected{% endif %}>In Process</option>
+          <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+        {% if selected_priority or selected_status %}
+        <a href="{{ url_for('laboratory.index') }}" class="btn btn-light btn-sm"><i class="bi bi-x-circle"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Orders Table -->
+<div class="content-card">
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>Requisition #</th>
+          <th>Patient</th>
+          <th>Consultant Doctor</th>
+          <th>Date</th>
+          <th>Priority</th>
+          <th>Tests Ordered</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="fw-bold"><a href="{{ url_for('laboratory.view_order', id=o.id) }}"><code>{{ o.order_number }}</code></a></td>
+          <td>
+            <div class="fw-semibold">{{ o.patient.full_name }}</div>
+            <small class="text-muted">{{ o.patient.patient_code }}</small>
+          </td>
+          <td>{{ o.doctor.full_name }}</td>
+          <td>{{ o.order_date.strftime('%b %d, %Y') }}</td>
+          <td>
+            <span class="badge {% if o.priority == 'STAT' %}bg-danger{% elif o.priority == 'Urgent' %}bg-warning text-dark{% else %}bg-light text-dark border{% endif %}">
+              {{ o.priority }}
+            </span>
+          </td>
+          <td>
+            {% for item in o.items %}
+            <span class="badge bg-primary-subtle text-primary border me-1">{{ item.lab_test.test_name }}</span>
+            {% else %}
+            <span class="text-muted small">No tests added</span>
+            {% endfor %}
+          </td>
+          <td>
+            <span class="badge badge-status {% if o.order_status == 'Completed' %}badge-active{% elif o.order_status == 'Pending' %}badge-scheduled{% else %}badge-completed{% endif %}">
+              {{ o.order_status }}
+            </span>
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('laboratory.view_order', id=o.id) }}" class="btn btn-outline-secondary btn-action-icon" title="View & Enter Results">
+                <i class="bi bi-file-earmark-medical"></i>
+              </a>
+              <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('laboratory.delete_order', id=o.id) }}" data-record-name="{{ o.order_number }}" title="Soft Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center py-4 text-muted">No laboratory requisitions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+    <div class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} orders)</div>
+    <ul class="pagination pagination-sm mb-0">
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('laboratory.index', page=pagination.prev_num, priority=selected_priority, status=selected_status) }}">Previous</a></li>
+      {% endif %}
+      <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('laboratory.index', page=pagination.next_num, priority=selected_priority, status=selected_status) }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

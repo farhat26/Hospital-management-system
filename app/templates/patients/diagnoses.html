@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Diagnoses (ICD-10) - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">ICD-10 Clinical Diagnoses Catalog</h3>
+    <p class="text-muted small mb-0">Standardized diagnostic definitions for inpatient and outpatient clinical coding</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>New Diagnosis Code</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('patients.diagnoses') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.icd_code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.icd_code(class="form-control", placeholder="e.g. I10, E11.9, J45") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.diagnosis_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.diagnosis_name(class="form-control", placeholder="e.g. Essential hypertension") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.category.label.text }}</label>
+            {{ form.category(class="form-control", placeholder="e.g. Cardiovascular, Respiratory") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=2) }}
+          </div>
+
+          <div class="form-check mb-4">
+            {{ form.is_chronic(class="form-check-input") }}
+            <label class="form-check-label" for="is_chronic">
+              {{ form.is_chronic.label.text }}
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-save me-1"></i>Save Diagnosis</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clipboard2-pulse text-primary me-2"></i>ICD-10 Clinical Coding Registry ({{ diagnoses|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>ICD Code</th>
+              <th>Diagnosis Name</th>
+              <th>Category</th>
+              <th>Chronic</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in diagnoses %}
+            <tr>
+              <td class="fw-bold text-primary"><code>{{ d.icd_code }}</code></td>
+              <td class="fw-semibold">{{ d.diagnosis_name }}</td>
+              <td><span class="badge bg-light text-dark border">{{ d.category or 'General' }}</span></td>
+              <td>
+                {% if d.is_chronic %}
+                <span class="badge bg-warning-subtle text-warning border">Chronic Condition</span>
+                {% else %}
+                <span class="badge bg-light text-muted">Acute</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center py-4 text-muted">No diagnosis codes registered in catalog.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

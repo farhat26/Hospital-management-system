@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Pharmacy Dispensary & Stock Control - Hospital Management System{% endblock %}
+
+{% block content %}
+<!-- Pharmacist Welcome Banner -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 60px; height: 60px;">
+        <i class="bi bi-prescription2"></i>
+      </div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h3 class="fw-bold mb-0 text-slate">Hospital Pharmacy Dispensary & Formulary</h3>
+          <span class="badge bg-primary-subtle text-primary border px-2.5 py-1">Pharmacist Portal</span>
+        </div>
+        <p class="text-muted small mb-0 mt-1">
+          Prescription dispensing, drug inventory reorder levels, lot expiry control, and retail point of sale (POS)
+        </p>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('pharmacy.create_sale') }}" class="btn btn-success btn-sm fw-semibold">
+        <i class="bi bi-receipt-cutoff me-1"></i> New POS Sale
+      </a>
+      <a href="{{ url_for('pharmacy.create_medicine') }}" class="btn btn-primary btn-sm fw-semibold">
+        <i class="bi bi-plus-circle me-1"></i> Add Medicine
+      </a>
+      <a href="{{ url_for('pharmacy.create_purchase_order') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+        <i class="bi bi-cart-plus me-1"></i> Purchase Order
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Pharmacist KPI Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Formulary Medicines</div>
+          <div class="stat-value text-primary">{{ total_medicines }}</div>
+          <small class="text-muted">Active Pharmaceutical Catalog</small>
+        </div>
+        <div class="stat-icon bg-primary-subtle text-primary">
+          <i class="bi bi-capsule"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Low Stock Alerts</div>
+          <div class="stat-value text-danger">{{ low_stock_count }}</div>
+          <small class="text-muted">Below Reorder Threshold</small>
+        </div>
+        <div class="stat-icon bg-danger-subtle text-danger">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Today's POS Sales</div>
+          <div class="stat-value text-success">{{ today_sales_count }}</div>
+          <small class="text-muted">PKR {{ "{:,.2f}".format(today_revenue) }} Today</small>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Pending Prescriptions</div>
+          <div class="stat-value text-warning">{{ pending_rx_count }}</div>
+          <small class="text-muted">Awaiting Counter Dispensing</small>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Low Stock Alerts Table & Category Chart -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-octagon text-danger me-2"></i>Critical Low Stock & Reorder Alerts</h6>
+        <a href="{{ url_for('pharmacy.create_purchase_order') }}" class="btn btn-sm btn-outline-danger py-0">+ Order Supply</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Category</th>
+              <th>Stock</th>
+              <th>Reorder Lvl</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for med in low_stock_medicines %}
+            <tr>
+              <td>
+                <a href="{{ url_for('pharmacy.view_medicine', id=med.id) }}" class="fw-bold text-dark">{{ med.name }}</a>
+                <small class="text-muted d-block">{{ med.generic_name }} ({{ med.strength }})</small>
+              </td>
+              <td><span class="badge bg-light text-dark border">{{ med.category.name if med.category else 'General' }}</span></td>
+              <td>
+                <span class="badge bg-danger fs-6">{{ med.total_stock }}</span>
+              </td>
+              <td><span class="text-muted">{{ med.reorder_level }}</span></td>
+              <td class="text-end">
+                <a href="{{ url_for('pharmacy.create_purchase_order') }}" class="btn btn-sm btn-outline-primary py-0">Reorder</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success me-1"></i>All stock levels are currently healthy and above threshold.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medicine Categories Chart -->
+  <div class="col-lg-5">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-pie-chart text-teal me-2"></i>Formulary by Category</h6>
+      </div>
+      <div class="content-card-body d-flex align-items-center justify-content-center" style="min-height: 260px;">
+        <canvas id="pharmacyCategoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Prescriptions to Dispense & Recent Sales -->
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-file-earmark-medical text-primary me-2"></i>Doctor Prescriptions Awaiting Fulfillment</h6>
+        <a href="{{ url_for('pharmacy.prescriptions') }}" class="btn btn-sm btn-outline-primary py-0">All Prescriptions</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Rx #</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rx in pending_prescriptions %}
+            <tr>
+              <td><a href="{{ url_for('pharmacy.view_prescription', id=rx.id) }}" class="fw-bold">{{ rx.prescription_code }}</a></td>
+              <td>{{ rx.patient.full_name }}</td>
+              <td>{{ rx.doctor.full_name }}</td>
+              <td><small class="text-muted">{{ rx.prescription_date.strftime('%b %d') }}</small></td>
+              <td class="text-end">
+                <a href="{{ url_for('pharmacy.create_sale') }}" class="btn btn-sm btn-success py-0">
+                  <i class="bi bi-receipt me-1"></i> Dispense POS
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No pending prescriptions in queue.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="content-card h-100">
+      <div class="content-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-receipt text-success me-2"></i>Recent POS Retail Sales</h6>
+        <a href="{{ url_for('pharmacy.sales') }}" class="btn btn-sm btn-outline-secondary py-0">POS Ledger</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Customer</th>
+              <th>Total PKR</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in recent_sales %}
+            <tr>
+              <td><a href="{{ url_for('pharmacy.view_sale', id=s.id) }}">{{ s.invoice_number }}</a></td>
+              <td>{{ s.patient.full_name if s.patient else (s.customer_name or 'Walk-in') }}</td>
+              <td class="fw-bold text-success">{{ "{:,.2f}".format(s.total_amount) }}</td>
+              <td><small class="text-muted">{{ s.sale_date.strftime('%I:%M %p') }}</small></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center py-3 text-muted">No POS sales recorded today.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('pharmacyCategoryChart');
+    if (ctx && window.Chart) {
+      const dataArr = {{ category_stock_data|tojson }};
+      const labels = dataArr.map(d => d[0]);
+      const values = dataArr.map(d => d[1]);
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels.length ? labels : ['Antibiotics', 'Analgesics', 'Cardiovascular', 'Respiratory'],
+          datasets: [{
+            data: values.length ? values : [5, 4, 3, 2],
+            backgroundColor: ['#0284c7', '#059669', '#f59e0b', '#dc2626', '#8b5cf6'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 12 } } }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

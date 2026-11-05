@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Hospital Departments - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Hospital Departments</h3>
+    <p class="text-muted small mb-0">Clinical wards, medical specialties, and administrative wings</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>Create Department</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('doctors.departments') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control", placeholder="e.g. Cardiology, Neurology") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.code(class="form-control", placeholder="e.g. CARD, NEUR") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.floor_location.label.text }}</label>
+            {{ form.floor_location(class="form-control", placeholder="e.g. 2nd Floor, Wing A") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=2) }}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-save me-1"></i>Save Department</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-diagram-3 text-primary me-2"></i>Active Departments ({{ departments|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Dept Name</th>
+              <th>Code</th>
+              <th>Floor Location</th>
+              <th>Doctors</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in departments %}
+            <tr>
+              <td class="fw-bold text-slate">{{ d.name }}</td>
+              <td><code>{{ d.code }}</code></td>
+              <td>{{ d.floor_location or 'N/A' }}</td>
+              <td><span class="badge bg-primary-subtle text-primary border">{{ d.doctor_associations|length }} Doctors</span></td>
+              <td><span class="badge badge-status {% if d.status == 'Active' %}badge-active{% else %}badge-deactive{% endif %}">{{ d.status }}</span></td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('doctors.edit_department', id=d.id) }}" class="btn btn-outline-primary btn-action-icon" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('doctors.delete_department', id=d.id) }}" data-record-name="{{ d.name }}" title="Soft Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No departments configured yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

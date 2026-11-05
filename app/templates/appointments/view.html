@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment {{ appointment.appointment_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ appointment.appointment_number }}</h3>
+      <span class="badge badge-status 
+        {% if appointment.current_status == 'Confirmed' %}badge-active
+        {% elif appointment.current_status == 'Scheduled' %}badge-scheduled
+        {% elif appointment.current_status == 'Completed' %}badge-completed
+        {% else %}badge-deactive{% endif %}">
+        {{ appointment.current_status }}
+      </span>
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      Booked on {{ appointment.created_at.strftime('%b %d, %Y at %H:%M') }} &bull; Type: <strong>{{ appointment.appointment_type }}</strong>
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('appointments.edit', id=appointment.id) }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-pencil me-1"></i> Edit
+    </a>
+    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('appointments.delete', id=appointment.id) }}" data-record-name="{{ appointment.appointment_number }}">
+      <i class="bi bi-trash3 me-1"></i> Delete
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Main Appointment Card -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-info-circle text-primary me-2"></i>Appointment Summary</h6>
+        <!-- Status Action Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Change Status
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <form method="POST" action="{{ url_for('appointments.update_status', id=appointment.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Confirmed">
+                <input type="hidden" name="reason" value="Confirmed by receptionist">
+                <button type="submit" class="dropdown-item text-primary"><i class="bi bi-check-circle me-1"></i> Confirm Appointment</button>
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="{{ url_for('appointments.update_status', id=appointment.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Completed">
+                <input type="hidden" name="reason" value="Consultation completed">
+                <button type="submit" class="dropdown-item text-success"><i class="bi bi-check2-all me-1"></i> Mark as Completed</button>
+              </form>
+            </li>
+            <li>
+              <form method="POST" action="{{ url_for('appointments.update_status', id=appointment.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Cancelled">
+                <input type="hidden" name="reason" value="Cancelled by patient request">
+                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-x-circle me-1"></i> Cancel Appointment</button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="content-card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="text-muted small">Patient Name:</label>
+            <div class="fw-bold"><a href="{{ url_for('patients.view', id=appointment.patient.id) }}">{{ appointment.patient.full_name }}</a> ({{ appointment.patient.patient_code }})</div>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small">Consulting Physician:</label>
+            <div class="fw-bold"><a href="{{ url_for('doctors.view', id=appointment.doctor.id) }}">{{ appointment.doctor.full_name }}</a></div>
+            <small class="text-muted">{{ appointment.doctor.qualification }}</small>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small">Department:</label>
+            <div>{{ appointment.department.name }} ({{ appointment.department.code }})</div>
+          </div>
+          <div class="col-md-6">
+            <label class="text-muted small">Scheduled Slot:</label>
+            <div class="fw-bold text-slate">{{ appointment.appointment_date.strftime('%A, %B %d, %Y') }} at {{ appointment.appointment_time.strftime('%H:%M') }}</div>
+          </div>
+          <div class="col-12">
+            <label class="text-muted small">Chief Symptoms / Reason for Visit:</label>
+            <div class="p-3 bg-light rounded-3">{{ appointment.reason or 'No specific symptoms entered.' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status History Timeline -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clock-history text-warning me-2"></i>Appointment Status Audit History</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Transition</th>
+              <th>Reason / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in appointment.status_history %}
+            <tr>
+              <td class="text-muted small">{{ h.changed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ h.old_status or 'New' }}</span>
+                <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                <span class="badge bg-primary-subtle text-primary border">{{ h.new_status }}</span>
+              </td>
+              <td>{{ h.change_reason or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center py-3 text-muted">No status transitions logged.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Queue Token Card -->
+    <div class="content-card mb-4 text-center">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-123 text-primary me-2"></i>OPD Queue Token</h6>
+      </div>
+      <div class="content-card-body p-4">
+        {% if appointment.queue_token %}
+        <div class="display-3 fw-bold text-primary mb-1">#{{ appointment.queue_token.token_number }}</div>
+        <div class="text-muted small mb-2">Token Date: {{ appointment.queue_token.token_date.strftime('%b %d, %Y') }}</div>
+        <div><span class="badge bg-light text-dark border px-3 py-1.5">{{ appointment.queue_token.token_status }}</span></div>
+        {% else %}
+        <p class="text-muted small mb-0">No queue token issued for this appointment.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Clinical Action -->
+    <div class="card border-0 shadow-sm rounded-4 bg-primary text-white p-4">
+      <h5 class="fw-bold mb-2"><i class="bi bi-journal-medical me-2"></i>Clinical Encounter</h5>
+      <p class="small text-white-50 mb-3">Record physical vitals, diagnose clinical findings, and generate prescriptions directly from this appointment.</p>
+      {% if appointment.visit %}
+      <a href="{{ url_for('appointments.view_visit', id=appointment.visit.id) }}" class="btn btn-light fw-semibold">
+        <i class="bi bi-eye me-1"></i> View Clinical Encounter
+      </a>
+      {% else %}
+      <a href="{{ url_for('appointments.create_visit') }}" class="btn btn-light fw-semibold">
+        <i class="bi bi-plus-circle me-1"></i> Start Consultation Visit
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

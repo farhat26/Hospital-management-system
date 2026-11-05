@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Invoices & Hospital Billing - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Hospital Billing & Invoices</h3>
+    <p class="text-muted small mb-0">Patient invoices, itemized service charges, settlements, and insurance claims</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('billing.insurance') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+      <i class="bi bi-shield-check me-1"></i> Insurance Providers & Policies
+    </a>
+    <a href="{{ url_for('billing.create_invoice') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-receipt me-1"></i> Generate Invoice
+    </a>
+  </div>
+</div>
+
+<!-- Revenue Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Total Billed</div>
+        <div class="stat-number">PKR {{ "{:,.0f}".format(total_billed) }}</div>
+        <small class="text-muted">Net Invoiced</small>
+      </div>
+      <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+        <i class="bi bi-receipt"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-number text-success">PKR {{ "{:,.0f}".format(total_collected) }}</div>
+        <small class="text-muted">Settled Payments</small>
+      </div>
+      <div class="stat-icon-wrapper bg-success-subtle text-success">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Outstanding Balance</div>
+        <div class="stat-number text-danger">PKR {{ "{:,.0f}".format(total_outstanding) }}</div>
+        <small class="text-muted">Pending Patient Co-pay</small>
+      </div>
+      <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+        <i class="bi bi-exclamation-circle"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <form method="GET" class="d-flex gap-2 align-items-center">
+      <select name="status" class="form-select form-select-sm" style="max-width: 250px;">
+        <option value="">-- All Payment Statuses --</option>
+        <option value="Unpaid" {% if selected_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+        <option value="Partially Paid" {% if selected_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+        <option value="Paid" {% if selected_status == 'Paid' %}selected{% endif %}>Paid in Full</option>
+        <option value="Overdue" {% if selected_status == 'Overdue' %}selected{% endif %}>Overdue</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      {% if selected_status %}
+      <a href="{{ url_for('billing.index') }}" class="btn btn-light btn-sm"><i class="bi bi-x-circle"></i></a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="content-card">
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Patient</th>
+          <th>Invoice Date</th>
+          <th>Due Date</th>
+          <th>Net Amount</th>
+          <th>Paid Amount</th>
+          <th>Balance Due</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td class="fw-bold"><a href="{{ url_for('billing.view_invoice', id=inv.id) }}"><code>{{ inv.invoice_number }}</code></a></td>
+          <td>
+            <div class="fw-semibold">{{ inv.patient.full_name }}</div>
+            <small class="text-muted">{{ inv.patient.patient_code }}</small>
+          </td>
+          <td>{{ inv.invoice_date.strftime('%b %d, %Y') }}</td>
+          <td>{{ inv.due_date.strftime('%b %d, %Y') }}</td>
+          <td class="fw-bold text-slate">PKR {{ "{:,.2f}".format(inv.net_amount) }}</td>
+          <td class="text-success">PKR {{ "{:,.2f}".format(inv.paid_amount) }}</td>
+          <td class="text-danger fw-semibold">PKR {{ "{:,.2f}".format(inv.balance_due) }}</td>
+          <td>
+            <span class="badge badge-status 
+              {% if inv.payment_status == 'Paid' %}badge-active
+              {% elif inv.payment_status == 'Partially Paid' %}badge-scheduled
+              {% else %}badge-deactive{% endif %}">
+              {{ inv.payment_status }}
+            </span>
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('billing.view_invoice', id=inv.id) }}" class="btn btn-outline-secondary btn-action-icon" title="View & Pay">
+                <i class="bi bi-eye"></i>
+              </a>
+              <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('billing.delete_invoice', id=inv.id) }}" data-record-name="{{ inv.invoice_number }}" title="Soft Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center py-4 text-muted">No invoices found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+    <div class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} invoices)</div>
+    <ul class="pagination pagination-sm mb-0">
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('billing.index', page=pagination.prev_num, status=selected_status) }}">Previous</a></li>
+      {% endif %}
+      <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('billing.index', page=pagination.next_num, status=selected_status) }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

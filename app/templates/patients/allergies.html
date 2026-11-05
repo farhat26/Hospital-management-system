@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Allergies Catalog - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Allergies & Adverse Reactions Catalog</h3>
+    <p class="text-muted small mb-0">Master repository of drug, food, and environmental allergens</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>New Allergen Entry</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('patients.allergies') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.allergen_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.allergen_name(class="form-control", placeholder="e.g. Penicillin, Peanuts") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.allergy_type.label.text }}</label>
+            {{ form.allergy_type(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.severity.label.text }}</label>
+            {{ form.severity(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.common_symptoms.label.text }}</label>
+            {{ form.common_symptoms(class="form-control", placeholder="e.g. Urticaria, Bronchospasm") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-save me-1"></i>Save Allergen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-list-check text-primary me-2"></i>Registered Allergens ({{ allergies|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Allergen Name</th>
+              <th>Category</th>
+              <th>Severity</th>
+              <th>Typical Symptoms</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in allergies %}
+            <tr>
+              <td class="fw-bold text-slate">{{ a.allergen_name }}</td>
+              <td><span class="badge bg-light text-dark border">{{ a.allergy_type }}</span></td>
+              <td>
+                <span class="badge {% if a.severity == 'Severe' %}bg-danger{% elif a.severity == 'Moderate' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                  {{ a.severity }}
+                </span>
+              </td>
+              <td>{{ a.common_symptoms or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center py-4 text-muted">No allergens registered in catalog.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Personnel Attendance Log - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Personnel Attendance & Time Tracking</h3>
+    <p class="text-muted small mb-0">Daily duty check-in, check-out, and shift presence monitoring</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Record Attendance Form -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-clock-history text-primary me-2"></i>Log Attendance</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.attendance_date.label.text }} <span class="text-danger">*</span></label>
+            {{ form.attendance_date(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.shift_id.label.text }} <span class="text-danger">*</span></label>
+            {{ form.shift_id(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Select Doctor (If Doctor)</label>
+            {{ form.doctor_id(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Select Nurse (If Nurse)</label>
+            {{ form.nurse_id(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Select General Staff (If Staff)</label>
+            {{ form.staff_id(class="form-select") }}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Check-in</label>
+              {{ form.check_in_time(class="form-control") }}
+            </div>
+            <div class="col-6">
+              <label class="form-label">Check-out</label>
+              {{ form.check_out_time(class="form-control") }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.attendance_status.label.text }}</label>
+            {{ form.attendance_status(class="form-select") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-check2-circle me-1"></i>Record Attendance</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance List by Date -->
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate">
+          <i class="bi bi-calendar2-check text-primary me-2"></i>Attendance Log for {{ target_date.strftime('%B %d, %Y') }}
+        </h6>
+        <form method="GET" class="d-flex gap-2">
+          <input type="date" name="date" class="form-control form-control-sm" value="{{ target_date.isoformat() }}">
+          <button type="submit" class="btn btn-sm btn-primary">Go</button>
+        </form>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Personnel</th>
+              <th>Category</th>
+              <th>Shift</th>
+              <th>Check In / Out</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in attendances %}
+            <tr>
+              <td class="fw-bold">
+                {% if a.doctor %}Dr. {{ a.doctor.first_name }} {{ a.doctor.last_name }}
+                {% elif a.nurse %}Nurse {{ a.nurse.full_name }}
+                {% elif a.staff %}{{ a.staff.full_name }}
+                {% else %}Unlinked{% endif %}
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border">
+                  {% if a.doctor %}Physician
+                  {% elif a.nurse %}Nursing
+                  {% else %}{{ a.staff.role_title if a.staff else 'Staff' }}{% endif %}
+                </span>
+              </td>
+              <td>{{ a.shift.name }}</td>
+              <td>
+                <small class="text-muted">
+                  {{ a.check_in_time.strftime('%H:%M') if a.check_in_time else '--:--' }} &bull; {{ a.check_out_time.strftime('%H:%M') if a.check_out_time else '--:--' }}
+                </small>
+              </td>
+              <td>
+                <span class="badge {% if a.attendance_status == 'Present' %}bg-success{% elif a.attendance_status == 'Late' %}bg-warning text-dark{% elif a.attendance_status == 'On Leave' %}bg-info text-dark{% else %}bg-danger{% endif %}">
+                  {{ a.attendance_status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">No attendance entries recorded for this date.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

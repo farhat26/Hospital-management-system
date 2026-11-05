@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-5">
+  <div class="col-md-6 col-lg-5 col-xl-4">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="bg-primary text-white p-4 text-center">
+        <i class="bi bi-hospital fs-1 mb-2"></i>
+        <h3 class="fw-bold mb-1">Hospital Management</h3>
+        <p class="mb-0 text-white-50" style="font-size: 0.9rem;">Sign in to access your portal</p>
+      </div>
+
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label" for="username_or_email">{{ form.username_or_email.label.text }}</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+              {{ form.username_or_email(class="form-control" + (" is-invalid" if form.username_or_email.errors else ""), placeholder="admin@hospital.com or admin") }}
+            </div>
+            {% for error in form.username_or_email.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="password">{{ form.password.label.text }}</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+              {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+            </div>
+            {% for error in form.password.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              {{ form.remember_me(class="form-check-input") }}
+              <label class="form-check-label text-muted small" for="remember_me">
+                {{ form.remember_me.label.text }}
+              </label>
+            </div>
+            <a href="#" class="text-decoration-none small text-primary" onclick="alert('Default demo passwords are listed below. Admin: Admin@123'); return false;">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+          </button>
+        </form>
+
+        <hr class="my-4 text-muted">
+
+        <!-- University Rubric & Demo Quick Logins -->
+        <div class="alert alert-info py-2 px-3 mb-0" style="font-size: 0.8rem;">
+          <div class="fw-bold mb-1"><i class="bi bi-info-circle-fill me-1"></i> Demo Credentials:</div>
+          <div class="d-flex justify-content-between mb-1">
+            <span><strong>Admin:</strong> admin@hospital.com</span>
+            <span class="text-muted">Admin@123</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span><strong>Doctor:</strong> sarah.ahmed@hospital.com</span>
+            <span class="text-muted">Doctor@123</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span><strong>Reception:</strong> reception@hospital.com</span>
+            <span class="text-muted">Reception@123</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span><strong>Pharma:</strong> pharma@hospital.com</span>
+            <span class="text-muted">Pharma@123</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

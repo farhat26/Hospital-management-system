@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} - Billing Statement{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4 d-print-none">
+  <div>
+    <h3 class="fw-bold mb-0 text-slate">Invoice: {{ invoice.invoice_number }}</h3>
+    <small class="text-muted">Issued on {{ invoice.invoice_date.strftime('%B %d, %Y') }} &bull; Due Date: {{ invoice.due_date.strftime('%B %d, %Y') }}</small>
+  </div>
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-printer me-1"></i> Print Invoice
+    </button>
+    <a href="{{ url_for('billing.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Printable Formal Statement -->
+    <div class="card border shadow-sm rounded-4 p-4 p-md-5 bg-white">
+      <!-- Invoice Header -->
+      <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
+        <div>
+          <h4 class="fw-bold text-primary mb-1"><i class="bi bi-hospital me-2"></i>HMS Teaching Hospital</h4>
+          <small class="text-muted d-block">Department of Finance & Patient Billing Services</small>
+          <small class="text-muted">Tel: +92 51 111-222-333 &bull; Tax NTN: 9948210-4</small>
+        </div>
+        <div class="text-end">
+          <div class="fs-4 fw-bold text-slate">INVOICE</div>
+          <code>{{ invoice.invoice_number }}</code>
+          <div class="mt-2">
+            <span class="badge badge-status 
+              {% if invoice.payment_status == 'Paid' %}badge-active
+              {% elif invoice.payment_status == 'Partially Paid' %}badge-scheduled
+              {% else %}badge-deactive{% endif %} fs-6">
+              {{ invoice.payment_status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bill To & Account Details -->
+      <div class="row g-3 p-3 bg-light rounded-3 mb-4">
+        <div class="col-sm-6">
+          <label class="text-muted small">Billed Patient:</label>
+          <div class="fw-bold text-slate"><a href="{{ url_for('patients.view', id=invoice.patient.id) }}">{{ invoice.patient.full_name }}</a></div>
+          <small class="text-muted">Patient Code: {{ invoice.patient.patient_code }} &bull; Age/Gender: {{ invoice.patient.age }} yrs / {{ invoice.patient.gender }}</small>
+        </div>
+        <div class="col-sm-6 text-sm-end">
+          <label class="text-muted small">Billing Particulars:</label>
+          <div>Invoice Date: <strong>{{ invoice.invoice_date.strftime('%d-%b-%Y') }}</strong></div>
+          <div>Payment Due Date: <strong>{{ invoice.due_date.strftime('%d-%b-%Y') }}</strong></div>
+          {% if invoice.admission %}<div>Inpatient Admission: <code>{{ invoice.admission.admission_number }}</code></div>{% endif %}
+          {% if invoice.visit %}<div>Outpatient Visit: <code>{{ invoice.visit.visit_number }}</code></div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Itemized Service Charges Table -->
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Service / Item Description</th>
+              <th>Category</th>
+              <th>Unit Rate</th>
+              <th>Qty</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in invoice.items %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td class="fw-semibold">{{ item.item_description }}</td>
+              <td><span class="badge bg-light text-dark border">{{ item.service_type }}</span></td>
+              <td>PKR {{ "{:,.2f}".format(item.unit_price) }}</td>
+              <td>{{ item.quantity }}</td>
+              <td class="text-end fw-bold">PKR {{ "{:,.2f}".format(item.subtotal) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-3 text-muted">No line charges added to this invoice yet.</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="5" class="text-end">Subtotal Charges:</th>
+              <th class="text-end">PKR {{ "{:,.2f}".format(invoice.total_amount) }}</th>
+            </tr>
+            {% if invoice.discount_amount > 0 %}
+            <tr>
+              <th colspan="5" class="text-end text-danger">Discount / Co-pay Adjustment:</th>
+              <th class="text-end text-danger">- PKR {{ "{:,.2f}".format(invoice.discount_amount) }}</th>
+            </tr>
+            {% endif %}
+            {% if invoice.tax_amount > 0 %}
+            <tr>
+              <th colspan="5" class="text-end">Sales Tax / GST:</th>
+              <th class="text-end">+ PKR {{ "{:,.2f}".format(invoice.tax_amount) }}</th>
+            </tr>
+            {% endif %}
+            <tr class="table-light">
+              <th colspan="5" class="text-end fs-6">Net Invoiced Amount:</th>
+              <th class="text-end fs-6 fw-bold text-slate">PKR {{ "{:,.2f}".format(invoice.net_amount) }}</th>
+            </tr>
+            <tr>
+              <th colspan="5" class="text-end text-success">Total Amount Paid:</th>
+              <th class="text-end text-success fw-bold">PKR {{ "{:,.2f}".format(invoice.paid_amount) }}</th>
+            </tr>
+            <tr class="table-danger">
+              <th colspan="5" class="text-end fs-5 text-danger">Outstanding Balance Due:</th>
+              <th class="text-end fs-5 fw-bold text-danger">PKR {{ "{:,.2f}".format(invoice.balance_due) }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Payment History Log -->
+      {% if invoice.payments %}
+      <div class="mb-4">
+        <h6 class="fw-bold text-slate mb-2"><i class="bi bi-wallet2 text-success me-2"></i>Recorded Payment Settlements</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Method</th>
+                <th>Reference #</th>
+                <th>Remarks</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in invoice.payments %}
+              <tr>
+                <td>{{ p.payment_date.strftime('%d-%b-%Y %H:%M') }}</td>
+                <td><span class="badge bg-light text-dark border">{{ p.payment_method }}</span></td>
+                <td><code>{{ p.transaction_reference or '-' }}</code></td>
+                <td><small class="text-muted">{{ p.notes or '-' }}</small></td>
+                <td class="text-end fw-bold text-success">PKR {{ "{:,.2f}".format(p.amount) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row pt-4 border-top text-muted small">
+        <div class="col-8">
+          <div>This is a system-generated hospital billing invoice. Computer-validated and authentic.</div>
+          <div>Inquiries: billing@hospital.com &bull; Accounts Counter, Ground Floor</div>
+        </div>
+        <div class="col-4 text-end align-self-end">
+          <div class="border-top d-inline-block pt-1 text-center" style="min-width: 150px;">
+            <small>Accounts Officer</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar Forms: Add Item & Post Payment -->
+  <div class="col-lg-4 d-print-none">
+    <!-- Add Item Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>Add Line Charge</h6>
+      </div>
+      <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('billing.add_item', id=invoice.id) }}">
+          {{ item_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small">Item Description <span class="text-danger">*</span></label>
+            {{ item_form.item_description(class="form-control form-control-sm", placeholder="e.g. Consultation Fee, Room Charge, Lab Test") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Service Category <span class="text-danger">*</span></label>
+            {{ item_form.service_type(class="form-select form-select-sm") }}
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small">Unit Rate (PKR)</label>
+              {{ item_form.unit_price(class="form-control form-control-sm", placeholder="1000.00") }}
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Qty</label>
+              {{ item_form.quantity(class="form-control form-control-sm", placeholder="1") }}
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="bi bi-plus me-1"></i>Add Charge Item</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Post Payment Settlement Form -->
+    {% if invoice.balance_due > 0 %}
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-cash-stack text-success me-2"></i>Post Payment Settlement</h6>
+      </div>
+      <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('billing.post_payment', id=invoice.id) }}">
+          {{ payment_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small">Settlement Amount (PKR) <span class="text-danger">*</span></label>
+            {{ payment_form.amount(class="form-control form-control-sm") }}
+            <small class="text-muted">Balance Due: PKR {{ "{:,.2f}".format(invoice.balance_due) }}</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Payment Channel <span class="text-danger">*</span></label>
+            {{ payment_form.payment_method(class="form-select form-select-sm") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Reference / Receipt / Transaction #</label>
+            {{ payment_form.transaction_reference(class="form-control form-control-sm", placeholder="e.g. TXN-CC-88910") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Remarks</label>
+            {{ payment_form.notes(class="form-control form-control-sm", rows=2, placeholder="POS slip, cashier counter remarks") }}
+          </div>
+
+          <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
+            <i class="bi bi-check2-circle me-1"></i> Post Payment Settlement
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

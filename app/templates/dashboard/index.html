@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Executive Hospital Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+  <div>
+    <h2 class="fw-bold mb-1 text-slate">Hospital Operations Dashboard</h2>
+    <p class="text-muted mb-0">Real-time metrics, bed occupancy, appointments, and diagnostic workflows</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('patients.create') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-person-plus me-1"></i> Register Patient
+    </a>
+    <a href="{{ url_for('appointments.create') }}" class="btn btn-teal btn-sm fw-semibold">
+      <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+    </a>
+    <a href="{{ url_for('billing.create_invoice') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-receipt me-1"></i> New Invoice
+    </a>
+  </div>
+</div>
+
+<!-- 8 Core Metric Cards Required by User Prompt -->
+<div class="row g-3 mb-4">
+  <!-- Card 1: Total Patients -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-number">{{ total_patients }}</div>
+        <small class="text-success fw-medium"><i class="bi bi-arrow-up-short"></i> Active Registry</small>
+      </div>
+      <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+        <i class="bi bi-people-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Total Doctors -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Consultant Doctors</div>
+        <div class="stat-number">{{ total_doctors }}</div>
+        <small class="text-info fw-medium"><i class="bi bi-patch-check"></i> Licensed Physicians</small>
+      </div>
+      <div class="stat-icon-wrapper bg-info-subtle text-info">
+        <i class="bi bi-heart-pulse-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Total Staff -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Hospital Staff</div>
+        <div class="stat-number">{{ total_staff }}</div>
+        <small class="text-muted fw-medium"><i class="bi bi-person-badge"></i> Nurses & Ops</small>
+      </div>
+      <div class="stat-icon-wrapper bg-secondary-subtle text-secondary">
+        <i class="bi bi-person-workspace"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: Total Appointments -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Appointments</div>
+        <div class="stat-number">{{ total_appointments }}</div>
+        <small class="text-warning fw-medium"><i class="bi bi-calendar-event"></i> OPD Bookings</small>
+      </div>
+      <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+        <i class="bi bi-calendar-check-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: Total Admissions -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Active Admissions</div>
+        <div class="stat-number">{{ total_admissions }}</div>
+        <small class="text-danger fw-medium"><i class="bi bi-hospital"></i> Inpatient Ward</small>
+      </div>
+      <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+        <i class="bi bi-box-arrow-in-right"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 6: Available Beds -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Available Beds</div>
+        <div class="stat-number">{{ available_beds }}</div>
+        <small class="text-success fw-medium"><i class="bi bi-check-circle"></i> Ready for Admission</small>
+      </div>
+      <div class="stat-icon-wrapper bg-success-subtle text-success">
+        <i class="bi bi-hospital-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 7: Pending Lab Tests -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Pending Lab Tests</div>
+        <div class="stat-number">{{ pending_lab_orders }}</div>
+        <small class="text-warning fw-medium"><i class="bi bi-clock-history"></i> In Process</small>
+      </div>
+      <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+        <i class="bi bi-eyedropper"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 8: Total Revenue -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-number">PKR {{ "{:,.0f}".format(revenue_total) }}</div>
+        <small class="text-primary fw-medium"><i class="bi bi-cash-stack"></i> Settled Payments</small>
+      </div>
+      <div class="stat-icon-wrapper bg-teal-subtle text-success">
+        <i class="bi bi-wallet2"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-pie-chart text-warning me-2"></i>Appointment Status</h6>
+      </div>
+      <div class="content-card-body d-flex align-items-center justify-content-center" style="min-height: 280px;">
+        <canvas id="appointmentStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-bar-chart-line text-primary me-2"></i>Doctors by Department</h6>
+      </div>
+      <div class="content-card-body d-flex align-items-center justify-content-center" style="min-height: 280px;">
+        <canvas id="deptDistributionChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-droplet text-danger me-2"></i>Patient Blood Groups</h6>
+      </div>
+      <div class="content-card-body d-flex align-items-center justify-content-center" style="min-height: 280px;">
+        <canvas id="bloodGroupChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Operational Feeds: Recent Appointments & Recent Admissions -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-calendar2-week text-primary me-2"></i>Recent Appointments</h6>
+        <a href="{{ url_for('appointments.index') }}" class="btn btn-sm btn-outline-primary py-0">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Appt #</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date / Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for apt in recent_appointments %}
+            <tr>
+              <td class="fw-semibold"><a href="{{ url_for('appointments.view', id=apt.id) }}">{{ apt.appointment_number }}</a></td>
+              <td>{{ apt.patient.full_name }}</td>
+              <td>{{ apt.doctor.full_name }}</td>
+              <td>{{ apt.appointment_date.strftime('%b %d') }} at {{ apt.appointment_time.strftime('%H:%M') }}</td>
+              <td>
+                <span class="badge badge-status 
+                  {% if apt.current_status == 'Confirmed' %}badge-active
+                  {% elif apt.current_status == 'Scheduled' %}badge-scheduled
+                  {% elif apt.current_status == 'Completed' %}badge-completed
+                  {% else %}badge-deactive{% endif %}">
+                  {{ apt.current_status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No recent appointments recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="content-card h-100">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-hospital text-danger me-2"></i>Inpatient Admissions</h6>
+        <a href="{{ url_for('wards.admissions') }}" class="btn btn-sm btn-outline-danger py-0">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Adm #</th>
+              <th>Patient</th>
+              <th>Admitting Doctor</th>
+              <th>Admitted On</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for adm in recent_admissions %}
+            <tr>
+              <td class="fw-semibold"><a href="{{ url_for('wards.view_admission', id=adm.id) }}">{{ adm.admission_number }}</a></td>
+              <td>{{ adm.patient.full_name }}</td>
+              <td>{{ adm.doctor.full_name }}</td>
+              <td>{{ adm.admission_date.strftime('%b %d, %Y') }}</td>
+              <td>
+                <span class="badge badge-status {% if adm.admission_status == 'Admitted' %}badge-active{% else %}badge-completed{% endif %}">
+                  {{ adm.admission_status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No active admissions.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- System Audit Feed -->
+<div class="content-card">
+  <div class="content-card-header">
+    <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-journal-text text-secondary me-2"></i>Live System Audit Trail</h6>
+    {% if current_user.has_role('Admin') %}
+    <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-sm btn-outline-secondary py-0">Full Audit Log</a>
+    {% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Action</th>
+          <th>Table</th>
+          <th>Record ID</th>
+          <th>User</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_audits %}
+        <tr>
+          <td class="text-muted small">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>
+            <span class="badge 
+              {% if log.action == 'CREATE' %}bg-success-subtle text-success
+              {% elif log.action == 'UPDATE' %}bg-info-subtle text-info
+              {% elif log.action == 'SOFT_DELETE' %}bg-warning-subtle text-warning
+              {% elif log.action == 'RESTORE' %}bg-primary-subtle text-primary
+              {% else %}bg-secondary-subtle text-secondary{% endif %}">
+              {{ log.action }}
+            </span>
+          </td>
+          <td><code>{{ log.table_name }}</code></td>
+          <td>#{{ log.record_id or '-' }}</td>
+          <td>{{ log.user.username if log.user else 'System' }}</td>
+          <td class="text-truncate" style="max-width: 320px;">{{ log.details }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-3">No audit events recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.hmsChartData = {
+    apptStatus: {{ appt_status_dict|tojson }},
+    deptDistribution: {{ dept_distribution|tojson }},
+    bloodGroups: {{ blood_group_counts|tojson }}
+  };
+</script>
+{% endblock %}

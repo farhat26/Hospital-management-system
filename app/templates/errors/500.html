@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}500 - Internal Server Error - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-7 col-lg-5 text-center">
+    <div class="display-1 fw-bold text-warning mb-2">500</div>
+    <div class="fs-4 fw-bold text-slate mb-2">Internal Server Encounter</div>
+    <p class="text-muted small mb-4">
+      An unexpected internal transaction exception occurred while processing the request. Active database transactions have been rolled back safely to maintain clinical data integrity.
+    </p>
+    <div class="d-flex justify-content-center gap-2">
+      <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4">
+        <i class="bi bi-house-door me-1"></i> Return to Dashboard
+      </a>
+      <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">
+        <i class="bi bi-arrow-left me-1"></i> Try Again
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

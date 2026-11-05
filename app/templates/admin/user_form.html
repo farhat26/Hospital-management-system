@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h3 class="fw-bold mb-1 text-slate">{{ title }}</h3>
+        <p class="text-muted small mb-0">Create authenticated user credentials and assign system operational roles</p>
+      </div>
+      <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Users List
+      </a>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person-badge me-2"></i>Account Credentials</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.username.label.text }} <span class="text-danger">*</span></label>
+              {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="e.g. dr_smith") }}
+              {% for error in form.username.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.email.label.text }} <span class="text-danger">*</span></label>
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="e.g. smith@hospital.com") }}
+              {% for error in form.email.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.password.label.text }} <span class="text-danger">*</span></label>
+              {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Minimum 6 characters") }}
+              {% for error in form.password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.confirm_password.label.text }} <span class="text-danger">*</span></label>
+              {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Re-enter password") }}
+              {% for error in form.confirm_password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-semibold small">{{ form.role_id.label.text }} <span class="text-danger">*</span></label>
+              {{ form.role_id(class="form-select" + (" is-invalid" if form.role_id.errors else "")) }}
+              {% for error in form.role_id.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary mb-3"><i class="bi bi-card-heading me-2"></i>Personal Profile Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.first_name.label.text }} <span class="text-danger">*</span></label>
+              {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else "")) }}
+              {% for error in form.first_name.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.last_name.label.text }} <span class="text-danger">*</span></label>
+              {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else "")) }}
+              {% for error in form.last_name.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-semibold small">{{ form.phone.label.text }}</label>
+              {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="+1 (555) 000-0000") }}
+              {% for error in form.phone.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+              <a href="{{ url_for('admin.users') }}" class="btn btn-light px-4">Cancel</a>
+              {{ form.submit(class="btn btn-primary px-4 fw-semibold", value="Create User Account") }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

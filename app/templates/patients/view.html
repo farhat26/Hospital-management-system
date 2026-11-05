@@ -1,0 +1,538 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ patient.full_name }} ({{ patient.patient_code }}) - Patient Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ patient.full_name }}</h3>
+      <span class="badge bg-primary-subtle text-primary border px-2.5 py-1">{{ patient.patient_code }}</span>
+      <span class="badge badge-status {% if patient.status == 'Active' %}badge-active{% else %}badge-deactive{% endif %}">{{ patient.status }}</span>
+      {% if patient.is_deleted %}
+      <span class="badge bg-danger">Soft Deleted (Recycle Bin)</span>
+      {% endif %}
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      {{ patient.age }} Years Old &bull; {{ patient.gender }} &bull; Blood Group: <strong>{{ patient.blood_group or 'N/A' }}</strong> &bull; Registered: {{ patient.created_at.strftime('%b %d, %Y') }}
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('patients.edit', id=patient.id) }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-pencil me-1"></i> Edit Details
+    </a>
+    <form method="POST" action="{{ url_for('patients.toggle_status', id=patient.id) }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-power me-1"></i> Toggle Status
+      </button>
+    </form>
+    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('patients.delete', id=patient.id) }}" data-record-name="{{ patient.full_name }}">
+      <i class="bi bi-trash3 me-1"></i> Delete
+    </button>
+  </div>
+</div>
+
+<!-- Nav Tabs for Related Records -->
+<ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm border" id="patientTabs" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active fw-medium" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+      <i class="bi bi-telephone me-1"></i> Contacts & Addresses
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="allergies-tab" data-bs-toggle="tab" data-bs-target="#allergies" type="button" role="tab">
+      <i class="bi bi-shield-slash me-1"></i> Allergies ({{ patient.allergies|length }})
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="records-tab" data-bs-toggle="tab" data-bs-target="#records" type="button" role="tab">
+      <i class="bi bi-file-earmark-medical me-1"></i> Medical History ({{ patient.medical_records|length }})
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="appts-tab" data-bs-toggle="tab" data-bs-target="#appts" type="button" role="tab">
+      <i class="bi bi-calendar2-check me-1"></i> Appointments
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="rx-tab" data-bs-toggle="tab" data-bs-target="#rx" type="button" role="tab">
+      <i class="bi bi-capsule me-1"></i> Prescriptions
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-medium" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button" role="tab">
+      <i class="bi bi-receipt me-1"></i> Invoices
+    </button>
+  </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="patientTabsContent">
+  <!-- 1. Contacts & Addresses -->
+  <div class="tab-pane fade show active" id="contacts" role="tabpanel">
+    <div class="row g-4">
+      <!-- Contact Channels -->
+      <div class="col-md-6 col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-telephone text-primary me-2"></i>Contact Numbers</h6>
+            <button class="btn btn-sm btn-outline-primary py-0" data-bs-toggle="modal" data-bs-target="#addContactModal">+ Add</button>
+          </div>
+          <div class="content-card-body">
+            {% for c in patient.contacts %}
+            <div class="mb-3 pb-2 border-bottom">
+              <div><strong>Primary Phone:</strong> {{ c.phone_primary }}</div>
+              {% if c.phone_secondary %}<div><small class="text-muted">Secondary:</small> {{ c.phone_secondary }}</div>{% endif %}
+              {% if c.email %}<div><small class="text-muted">Email:</small> {{ c.email }}</div>{% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No phone contacts added yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Addresses -->
+      <div class="col-md-6 col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-geo-alt text-danger me-2"></i>Residential Address</h6>
+            <button class="btn btn-sm btn-outline-primary py-0" data-bs-toggle="modal" data-bs-target="#addAddressModal">+ Add</button>
+          </div>
+          <div class="content-card-body">
+            {% for a in patient.addresses %}
+            <div class="mb-3 pb-2 border-bottom">
+              <span class="badge bg-light text-dark mb-1">{{ a.address_type }}</span>
+              <div>{{ a.street_address }}</div>
+              <small class="text-muted">{{ a.city }}{% if a.state %}, {{ a.state }}{% endif %} - {{ a.country }}</small>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No residential addresses listed.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contacts -->
+      <div class="col-md-6 col-lg-4">
+        <div class="content-card h-100">
+          <div class="content-card-header">
+            <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Emergency Contacts</h6>
+            <button class="btn btn-sm btn-outline-primary py-0" data-bs-toggle="modal" data-bs-target="#addEmergencyModal">+ Add</button>
+          </div>
+          <div class="content-card-body">
+            {% for ec in patient.emergency_contacts %}
+            <div class="mb-3 pb-2 border-bottom">
+              <div class="fw-semibold">{{ ec.contact_name }} <span class="badge bg-secondary-subtle text-secondary">{{ ec.relationship }}</span></div>
+              <div><i class="bi bi-telephone-fill me-1 small text-success"></i>{{ ec.phone_number }}</div>
+              {% if ec.address %}<small class="text-muted">{{ ec.address }}</small>{% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No emergency next-of-kin contacts registered.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Allergies -->
+  <div class="tab-pane fade" id="allergies" role="tabpanel">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-shield-slash text-danger me-2"></i>Documented Patient Allergies</h6>
+        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#addAllergyModal">+ Record Allergy</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Allergen</th>
+              <th>Category</th>
+              <th>Severity</th>
+              <th>Known Reaction</th>
+              <th>Diagnosed Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pa in patient.allergies %}
+            <tr>
+              <td class="fw-bold text-danger">{{ pa.allergy.allergen_name }}</td>
+              <td>{{ pa.allergy.allergy_type }}</td>
+              <td><span class="badge bg-danger">{{ pa.allergy.severity }}</span></td>
+              <td>{{ pa.reaction_description or pa.allergy.common_symptoms or '-' }}</td>
+              <td>{{ pa.diagnosed_date or '-' }}</td>
+              <td>{{ pa.notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No known medical allergies documented for this patient.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Medical Records -->
+  <div class="tab-pane fade" id="records" role="tabpanel">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-file-earmark-medical text-primary me-2"></i>Longitudinal Medical History</h6>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMedicalRecordModal">+ Add Medical Entry</button>
+      </div>
+      <div class="content-card-body">
+        {% for mr in patient.medical_records %}
+        <div class="card mb-3 border bg-light">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-primary"><i class="bi bi-calendar3 me-1"></i> {{ mr.record_date.strftime('%B %d, %Y') }}</span>
+            <small class="text-muted">Recorded by Staff #{{ mr.created_by_id or 'System' }}</small>
+          </div>
+          <div class="card-body">
+            <h6 class="fw-bold text-slate">Chief Complaint:</h6>
+            <p>{{ mr.chief_complaint }}</p>
+            {% if mr.history_of_present_illness %}
+            <h6 class="fw-bold text-slate">History of Present Illness:</h6>
+            <p class="text-muted">{{ mr.history_of_present_illness }}</p>
+            {% endif %}
+            {% if mr.past_medical_history %}
+            <h6 class="fw-bold text-slate">Past Medical / Surgical History:</h6>
+            <p class="text-muted">{{ mr.past_medical_history }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p class="text-center py-4 text-muted mb-0">No medical records documented yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Appointments -->
+  <div class="tab-pane fade" id="appts" role="tabpanel">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-calendar2-check text-warning me-2"></i>Patient Appointments</h6>
+        <a href="{{ url_for('appointments.create') }}" class="btn btn-sm btn-outline-primary">+ Book Appointment</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Appt #</th>
+              <th>Doctor</th>
+              <th>Department</th>
+              <th>Date & Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for apt in patient.appointments %}
+            <tr>
+              <td class="fw-bold"><a href="{{ url_for('appointments.view', id=apt.id) }}">{{ apt.appointment_number }}</a></td>
+              <td>{{ apt.doctor.full_name }}</td>
+              <td>{{ apt.department.name }}</td>
+              <td>{{ apt.appointment_date.strftime('%b %d, %Y') }} at {{ apt.appointment_time.strftime('%H:%M') }}</td>
+              <td>{{ apt.reason or '-' }}</td>
+              <td><span class="badge badge-status {% if apt.current_status == 'Confirmed' %}badge-active{% elif apt.current_status == 'Scheduled' %}badge-scheduled{% elif apt.current_status == 'Completed' %}badge-completed{% else %}badge-deactive{% endif %}">{{ apt.current_status }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-3 text-muted">No appointments found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Prescriptions -->
+  <div class="tab-pane fade" id="rx" role="tabpanel">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-capsule text-teal me-2"></i>Issued Prescriptions</h6>
+        <a href="{{ url_for('pharmacy.create_prescription') }}" class="btn btn-sm btn-outline-teal">+ Issue Prescription</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Rx Code</th>
+              <th>Prescribing Doctor</th>
+              <th>Date</th>
+              <th>Medicines Prescribed</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rx in patient.prescriptions %}
+            <tr>
+              <td class="fw-bold"><a href="{{ url_for('pharmacy.view_prescription', id=rx.id) }}">{{ rx.prescription_code }}</a></td>
+              <td>{{ rx.doctor.full_name }}</td>
+              <td>{{ rx.prescription_date.strftime('%b %d, %Y') }}</td>
+              <td>
+                {% for item in rx.items %}
+                <span class="badge bg-light text-dark border">{{ item.medicine.name }} ({{ item.dosage }})</span>
+                {% endfor %}
+              </td>
+              <td class="text-end">
+                <a href="{{ url_for('pharmacy.view_prescription', id=rx.id) }}" class="btn btn-sm btn-outline-secondary">View Rx</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No prescriptions issued yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Invoices -->
+  <div class="tab-pane fade" id="billing" role="tabpanel">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-receipt text-success me-2"></i>Billing & Invoices</h6>
+        <a href="{{ url_for('billing.create_invoice') }}" class="btn btn-sm btn-outline-success">+ Create Invoice</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Date</th>
+              <th>Net Amount</th>
+              <th>Paid Amount</th>
+              <th>Balance Due</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in patient.invoices %}
+            <tr>
+              <td class="fw-bold"><a href="{{ url_for('billing.view_invoice', id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+              <td>{{ inv.invoice_date.strftime('%b %d, %Y') }}</td>
+              <td class="fw-bold">PKR {{ "{:,.2f}".format(inv.net_amount) }}</td>
+              <td class="text-success">PKR {{ "{:,.2f}".format(inv.paid_amount) }}</td>
+              <td class="text-danger">PKR {{ "{:,.2f}".format(inv.balance_due) }}</td>
+              <td><span class="badge badge-status {% if inv.payment_status == 'Paid' %}badge-active{% elif inv.payment_status == 'Unpaid' %}badge-deactive{% else %}badge-scheduled{% endif %}">{{ inv.payment_status }}</span></td>
+              <td class="text-end">
+                <a href="{{ url_for('billing.view_invoice', id=inv.id) }}" class="btn btn-sm btn-outline-secondary">View Bill</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-center py-3 text-muted">No billing invoices generated.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Contact -->
+<div class="modal fade" id="addContactModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('patients.add_contact', id=patient.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Contact Channel</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Primary Phone <span class="text-danger">*</span></label>
+            <input type="text" name="phone_primary" class="form-control" required placeholder="+92 300 1234567">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Secondary Phone</label>
+            <input type="text" name="phone_secondary" class="form-control" placeholder="Optional alternative phone">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="patient@email.com">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Address -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('patients.add_address', id=patient.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Postal / Home Address</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Address Type</label>
+            <select name="address_type" class="form-select">
+              <option value="Home">Home Address</option>
+              <option value="Work">Work / Office</option>
+              <option value="Permanent">Permanent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Street Address <span class="text-danger">*</span></label>
+            <input type="text" name="street_address" class="form-control" required placeholder="House/Flat #, Street Name, Sector">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">City <span class="text-danger">*</span></label>
+              <input type="text" name="city" class="form-control" required placeholder="Islamabad, Lahore, etc.">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Province / State</label>
+              <input type="text" name="state" class="form-control" placeholder="Punjab, Sindh, etc.">
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label">Postal Code</label>
+              <input type="text" name="postal_code" class="form-control" placeholder="44000">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Country</label>
+              <input type="text" name="country" class="form-control" value="Pakistan" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Address</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Emergency Contact -->
+<div class="modal fade" id="addEmergencyModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('patients.add_emergency_contact', id=patient.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Next-of-Kin / Emergency Contact</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+            <input type="text" name="contact_name" class="form-control" required placeholder="e.g. Asim Raza">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Relationship <span class="text-danger">*</span></label>
+            <input type="text" name="relationship" class="form-control" required placeholder="Spouse, Father, Mother, Sibling, etc.">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+            <input type="text" name="phone_number" class="form-control" required placeholder="+92 321 9876543">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-control" placeholder="Optional physical address">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Emergency Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Allergy -->
+<div class="modal fade" id="addAllergyModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('patients.add_allergy', id=patient.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header bg-danger-subtle text-danger">
+          <h5 class="modal-title fw-bold"><i class="bi bi-shield-slash me-2"></i>Record Patient Allergy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Select Allergen <span class="text-danger">*</span></label>
+            <select name="allergy_id" class="form-select" required>
+              {% for al in available_allergies or [] %}
+              <option value="{{ al.id }}">{{ al.allergen_name }} ({{ al.allergy_type }} - {{ al.severity }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Observed Reaction Description</label>
+            <input type="text" name="reaction_description" class="form-control" placeholder="e.g. Urticaria, swelling, breathing difficulty">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Clinical Notes</label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="Diagnostic remarks or instructions"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Save Allergy Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Medical Record -->
+<div class="modal fade" id="addMedicalRecordModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('patients.add_medical_record', id=patient.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-medical me-2"></i>Document Medical Record</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Chief Complaint <span class="text-danger">*</span></label>
+            <textarea name="chief_complaint" class="form-control" rows="2" required placeholder="Primary symptom or presentation reason"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">History of Present Illness</label>
+            <textarea name="history_of_present_illness" class="form-control" rows="3" placeholder="Timeline, severity, progression, aggravating/relieving factors"></textarea>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Past Medical History</label>
+              <textarea name="past_medical_history" class="form-control" rows="2" placeholder="Chronic conditions, prior hospital stays"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Family Medical History</label>
+              <textarea name="family_history" class="form-control" rows="2" placeholder="Hereditary illnesses, diabetes, hypertension"></textarea>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Social & Lifestyle History</label>
+            <input type="text" name="social_history" class="form-control" placeholder="Smoking, occupation, diet, exercise">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Medical Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

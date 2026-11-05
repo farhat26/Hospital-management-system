@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Lab Order {{ order.order_number }} - Investigation Report{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ order.order_number }}</h3>
+      <span class="badge {% if order.priority == 'STAT' %}bg-danger{% elif order.priority == 'Urgent' %}bg-warning text-dark{% else %}bg-light text-dark border{% endif %} px-2.5 py-1">
+        {{ order.priority }} Priority
+      </span>
+      <span class="badge badge-status {% if order.order_status == 'Completed' %}badge-active{% else %}badge-scheduled{% endif %}">
+        {{ order.order_status }}
+      </span>
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      Requisition Date: {{ order.order_date.strftime('%B %d, %Y at %H:%M') }} &bull; Doctor: <strong>{{ order.doctor.full_name }}</strong>
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-printer me-1"></i> Print Report
+    </button>
+    <a href="{{ url_for('laboratory.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Requisitions
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Ordered Tests & Results Table -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clipboard2-pulse text-primary me-2"></i>Investigation Findings & Analytical Results</h6>
+      </div>
+      <div class="content-card-body p-0">
+        {% for item in order.items %}
+        <div class="p-3 border-bottom {% if item.result and item.result.is_abnormal %}bg-danger-subtle bg-opacity-25{% endif %}">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h6 class="fw-bold mb-0 text-slate">{{ item.lab_test.test_name }}</h6>
+              <small class="text-muted"><code>{{ item.lab_test.test_code }}</code> &bull; Sample: <strong>{{ item.sample_type }}</strong> &bull; Category: {{ item.lab_test.category }}</small>
+            </div>
+            <div>
+              <span class="badge {% if item.item_status == 'Completed' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                {{ item.item_status }}
+              </span>
+            </div>
+          </div>
+
+          {% if item.result %}
+          <div class="p-3 bg-white rounded-3 border">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-5">
+                <label class="text-muted small d-block">Result Value / Reading:</label>
+                <div class="fs-6 fw-bold {% if item.result.is_abnormal %}text-danger{% else %}text-success{% endif %}">
+                  {{ item.result.result_value }}
+                  {% if item.result.is_abnormal %}
+                  <span class="badge bg-danger ms-2"><i class="bi bi-exclamation-triangle me-1"></i>ABNORMAL</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="text-muted small d-block">Reference Normal Range:</label>
+                <div class="small text-muted">{{ item.result.reference_range_snapshot or item.lab_test.normal_range or 'N/A' }}</div>
+              </div>
+              <div class="col-md-3 text-md-end">
+                <small class="text-muted d-block">Verified:</small>
+                <small class="fw-medium text-slate">{{ item.result.verified_at.strftime('%d-%b-%Y %H:%M') }}</small>
+              </div>
+              {% if item.result.remarks %}
+              <div class="col-12 mt-2 pt-2 border-top">
+                <small class="text-muted"><strong>Technician Remarks:</strong> {{ item.result.remarks }}</small>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <!-- Result Entry Form -->
+          <div class="p-3 bg-light rounded-3 border">
+            <h6 class="small fw-bold text-slate mb-2"><i class="bi bi-pen me-1"></i>Enter & Verify Diagnostic Result</h6>
+            <form method="POST" action="{{ url_for('laboratory.record_result', item_id=item.id) }}">
+              {{ result_form.hidden_tag() }}
+
+              <div class="row g-2">
+                <div class="col-md-5">
+                  <input type="text" name="result_value" class="form-control form-control-sm" required placeholder="Result Value (e.g. 14.2 g/dL, Negative)">
+                </div>
+                <div class="col-md-4">
+                  <input type="text" name="reference_range_snapshot" class="form-control form-control-sm" value="{{ item.lab_test.normal_range or '' }}" placeholder="Reference Range">
+                </div>
+                <div class="col-md-3 d-flex align-items-center">
+                  <div class="form-check">
+                    <input type="checkbox" name="is_abnormal" class="form-check-input" id="abnormal_{{ item.id }}">
+                    <label class="form-check-label small text-danger fw-bold" for="abnormal_{{ item.id }}">Abnormal</label>
+                  </div>
+                </div>
+                <div class="col-md-9">
+                  <input type="text" name="remarks" class="form-control form-control-sm" placeholder="Technician / Pathologist remarks">
+                </div>
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="bi bi-check2 me-1"></i>Verify</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <p class="text-center py-4 text-muted mb-0">No diagnostic tests ordered in this requisition. Add a test on the right.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Add Test to Requisition Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>Add Test to Order</h6>
+      </div>
+      <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('laboratory.add_order_item', id=order.id) }}">
+          {{ item_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small">Select Investigation <span class="text-danger">*</span></label>
+            {{ item_form.lab_test_id(class="form-select form-select-sm") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Specimen / Sample Type</label>
+            {{ item_form.sample_type(class="form-select form-select-sm") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="bi bi-plus me-1"></i>Add Investigation</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Patient Details -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-person text-primary me-2"></i>Patient Profile</h6>
+      </div>
+      <div class="content-card-body p-3 small">
+        <div class="fw-bold fs-6 mb-1"><a href="{{ url_for('patients.view', id=order.patient.id) }}">{{ order.patient.full_name }}</a></div>
+        <div class="text-muted mb-1">{{ order.patient.patient_code }} &bull; {{ order.patient.age }} yrs / {{ order.patient.gender }}</div>
+        <div class="text-muted">Blood Group: <strong class="text-danger">{{ order.patient.blood_group or 'N/A' }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

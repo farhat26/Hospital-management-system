@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Procurement Purchase Orders - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Procurement & Purchase Orders</h3>
+    <p class="text-muted small mb-0">Bulk medicine requisitions, vendor purchase orders, and stock receipts</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('pharmacy.suppliers') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-truck me-1"></i> Suppliers
+    </a>
+    <a href="{{ url_for('pharmacy.create_purchase_order') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-cart-plus me-1"></i> Create Purchase Order
+    </a>
+  </div>
+</div>
+
+<div class="content-card">
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>PO Number</th>
+          <th>Supplier</th>
+          <th>Order Date</th>
+          <th>Expected Delivery</th>
+          <th>Total Cost</th>
+          <th>Items Count</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for po in purchase_orders %}
+        <tr>
+          <td class="fw-bold"><a href="{{ url_for('pharmacy.view_purchase_order', id=po.id) }}"><code>{{ po.po_number }}</code></a></td>
+          <td>{{ po.supplier.supplier_name }}</td>
+          <td>{{ po.order_date.strftime('%b %d, %Y') }}</td>
+          <td>{{ po.expected_delivery_date.strftime('%b %d, %Y') if po.expected_delivery_date else 'TBD' }}</td>
+          <td class="fw-bold text-slate">PKR {{ "{:,.2f}".format(po.total_amount) }}</td>
+          <td><span class="badge bg-light text-dark border">{{ po.items|length }} Items</span></td>
+          <td>
+            <span class="badge 
+              {% if po.order_status == 'Received' %}bg-success
+              {% elif po.order_status == 'Ordered' %}bg-primary
+              {% elif po.order_status == 'Draft' %}bg-secondary
+              {% else %}bg-danger{% endif %}">
+              {{ po.order_status }}
+            </span>
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('pharmacy.view_purchase_order', id=po.id) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-eye me-1"></i> View & Receive
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center py-4 text-muted">No purchase orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Diagnostic Tests Catalog - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Pathology & Diagnostic Investigations Catalog</h3>
+    <p class="text-muted small mb-0">Standardized test protocols, specimen requirements, reference ranges, and tariff</p>
+  </div>
+  <a href="{{ url_for('laboratory.index') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Requisitions
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>Add Diagnostic Test</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('laboratory.tests') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.test_code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.test_code(class="form-control", placeholder="e.g. CBC-01, LFT-01") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.test_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.test_name(class="form-control", placeholder="e.g. Complete Blood Count") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.category.label.text }}</label>
+            {{ form.category(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.cost.label.text }} <span class="text-danger">*</span></label>
+            {{ form.cost(class="form-control", placeholder="e.g. 750.00") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.normal_range.label.text }}</label>
+            {{ form.normal_range(class="form-control", placeholder="e.g. 13.0 - 17.0 g/dL") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.unit_of_measure.label.text }}</label>
+            {{ form.unit_of_measure(class="form-control", placeholder="e.g. mg/dL, g/dL, U/L") }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=2) }}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-save me-1"></i>Save Diagnostic Test</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clipboard2-data text-primary me-2"></i>Investigation Protocols ({{ tests|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Test Code</th>
+              <th>Investigation Name</th>
+              <th>Category</th>
+              <th>Reference Normal</th>
+              <th>Tariff (PKR)</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tests %}
+            <tr>
+              <td class="fw-bold text-primary"><code>{{ t.test_code }}</code></td>
+              <td class="fw-semibold">{{ t.test_name }}</td>
+              <td><span class="badge bg-light text-dark border">{{ t.category }}</span></td>
+              <td><small class="text-muted">{{ t.normal_range or '-' }}</small></td>
+              <td class="fw-bold text-slate">PKR {{ "{:,.0f}".format(t.cost) }}</td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('laboratory.edit_test', id=t.id) }}" class="btn btn-outline-primary btn-action-icon" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('laboratory.delete_test', id=t.id) }}" data-record-name="{{ t.test_name }}" title="Soft Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No diagnostic tests registered in catalog.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

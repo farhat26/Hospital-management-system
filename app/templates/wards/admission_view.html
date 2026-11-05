@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Admission {{ admission.admission_number }} - Inpatient Stay Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ admission.admission_number }}</h3>
+      <span class="badge badge-status {% if admission.admission_status == 'Admitted' %}badge-active{% else %}badge-completed{% endif %} px-2.5 py-1">
+        {{ admission.admission_status }}
+      </span>
+      <span class="badge bg-light text-dark border">{{ admission.admission_type }}</span>
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      Patient: <strong><a href="{{ url_for('patients.view', id=admission.patient.id) }}">{{ admission.patient.full_name }}</a></strong> &bull; Admitting Consultant: <strong>{{ admission.doctor.full_name }}</strong>
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('wards.admissions') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Admissions
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- Clinical Summary -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-clipboard2-pulse text-danger me-2"></i>Indication for Admission</h6>
+      </div>
+      <div class="content-card-body">
+        <p class="p-3 bg-light rounded-3 mb-3">{{ admission.reason_for_admission }}</p>
+        <div class="row g-2 small text-muted">
+          <div class="col-sm-6"><strong>Admitted On:</strong> {{ admission.admission_date.strftime('%B %d, %Y at %H:%M') }}</div>
+          <div class="col-sm-6"><strong>Length of Stay:</strong> {{ ((now - admission.admission_date).days)|default(1) }} Days</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bed Allocation History -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-hospital text-primary me-2"></i>Bed Allocation History</h6>
+        {% if admission.admission_status == 'Admitted' %}
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#transferBedModal">
+          <i class="bi bi-arrow-left-right me-1"></i> Transfer Bed
+        </button>
+        {% endif %}
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Bed</th>
+              <th>Ward & Room</th>
+              <th>Allocated From</th>
+              <th>Allocated To</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ba in admission.bed_allocations %}
+            <tr>
+              <td class="fw-bold">
+                <span class="badge bg-light text-dark border">{{ ba.bed.bed_number }}</span>
+              </td>
+              <td>{{ ba.bed.room.ward.ward_name }} (Room {{ ba.bed.room.room_number }})</td>
+              <td>{{ ba.allocated_from.strftime('%d-%b-%Y %H:%M') }}</td>
+              <td>
+                {% if ba.allocated_to %}
+                {{ ba.allocated_to.strftime('%d-%b-%Y %H:%M') }}
+                {% else %}
+                <span class="badge bg-success-subtle text-success border">Current Active Bed</span>
+                {% endif %}
+              </td>
+              <td>{{ ba.allocation_notes or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No bed allocations recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Discharge Summary (If discharged) -->
+    {% if admission.discharge %}
+    <div class="content-card border-success">
+      <div class="content-card-header bg-success-subtle text-success">
+        <h6 class="fw-bold mb-0"><i class="bi bi-check-circle me-2"></i>Formal Medical Discharge Summary</h6>
+        <span class="badge bg-success">{{ admission.discharge.discharge_type }}</span>
+      </div>
+      <div class="content-card-body">
+        <div class="mb-3">
+          <label class="text-muted small fw-bold">Discharge Date & Time:</label>
+          <div>{{ admission.discharge.discharge_date.strftime('%B %d, %Y at %H:%M') }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="text-muted small fw-bold">Hospital Course & Clinical Summary:</label>
+          <div class="p-3 bg-light rounded-3">{{ admission.discharge.discharge_summary }}</div>
+        </div>
+        {% if admission.discharge.follow_up_instructions %}
+        <div class="mb-3">
+          <label class="text-muted small fw-bold">Follow-up Instructions & Medications:</label>
+          <div class="p-3 bg-light rounded-3">{{ admission.discharge.follow_up_instructions }}</div>
+        </div>
+        {% endif %}
+        {% if admission.discharge.follow_up_date %}
+        <div class="small text-muted">
+          <strong>Scheduled OPD Review Date:</strong> {{ admission.discharge.follow_up_date.strftime('%d-%b-%Y') }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Discharge Action Card (if still admitted) -->
+    {% if admission.admission_status == 'Admitted' %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-box-arrow-right text-danger me-2"></i>Discharge Patient</h6>
+      </div>
+      <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('wards.process_discharge', id=admission.id) }}">
+          {{ discharge_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small">Discharge Classification <span class="text-danger">*</span></label>
+            {{ discharge_form.discharge_type(class="form-select form-select-sm") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Discharge Summary <span class="text-danger">*</span></label>
+            {{ discharge_form.discharge_summary(class="form-control form-control-sm", rows=3, placeholder="Condition on discharge, treatment given") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Follow-up Instructions</label>
+            {{ discharge_form.follow_up_instructions(class="form-control form-control-sm", rows=2, placeholder="Discharge meds, wound care") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Follow-up Date</label>
+            {{ discharge_form.follow_up_date(class="form-control form-control-sm") }}
+          </div>
+
+          <button type="submit" class="btn btn-danger btn-sm w-100 fw-semibold" onclick="return confirm('Process discharge and release allocated bed?');">
+            <i class="bi bi-check2-circle me-1"></i> Process Discharge & Release Bed
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Inpatient Invoicing -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-receipt text-success me-2"></i>Inpatient Invoices</h6>
+        <a href="{{ url_for('billing.create_invoice') }}" class="btn btn-sm btn-outline-success py-0">+ Bill</a>
+      </div>
+      <div class="content-card-body p-3">
+        {% for inv in admission.invoices %}
+        <div class="mb-2 pb-2 border-bottom">
+          <div class="fw-bold"><a href="{{ url_for('billing.view_invoice', id=inv.id) }}">{{ inv.invoice_number }}</a></div>
+          <small class="text-muted">Total: PKR {{ "{:,.2f}".format(inv.net_amount) }} ({{ inv.payment_status }})</small>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No invoice created for this stay yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Transfer Bed -->
+<div class="modal fade" id="transferBedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('wards.transfer_bed', id=admission.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Transfer Inpatient to New Bed</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Select Available Target Bed <span class="text-danger">*</span></label>
+            {{ alloc_form.bed_id(class="form-select") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Transfer Clinical Reason</label>
+            {{ alloc_form.allocation_notes(class="form-control", placeholder="e.g. Transferred to ICU or Stepdown") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Execute Bed Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

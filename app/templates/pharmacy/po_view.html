@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Purchase Order {{ po.po_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="fw-bold mb-0 text-slate">{{ po.po_number }}</h3>
+      <span class="badge 
+        {% if po.order_status == 'Received' %}bg-success
+        {% elif po.order_status == 'Ordered' %}bg-primary
+        {% else %}bg-secondary{% endif %} px-2.5 py-1">
+        {{ po.order_status }}
+      </span>
+    </div>
+    <p class="text-muted small mb-0 mt-1">
+      Supplier: <strong>{{ po.supplier.supplier_name }}</strong> &bull; Ordered on: {{ po.order_date.strftime('%B %d, %Y') }}
+    </p>
+  </div>
+
+  <div class="d-flex gap-2">
+    {% if po.order_status != 'Received' %}
+    <form method="POST" action="{{ url_for('pharmacy.receive_po', id=po.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-success btn-sm fw-semibold">
+        <i class="bi bi-box-arrow-in-down me-1"></i> Mark as Received
+      </button>
+    </form>
+    {% endif %}
+    <a href="{{ url_for('pharmacy.purchase_orders') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Orders
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <!-- PO Line Items Table -->
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-list-check text-primary me-2"></i>Ordered Drug Items ({{ po.items|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Form & Strength</th>
+              <th>Quantity Ordered</th>
+              <th>Unit Cost</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in po.items %}
+            <tr>
+              <td class="fw-bold">{{ item.medicine.name }}</td>
+              <td>{{ item.medicine.dosage_form }} ({{ item.medicine.strength }})</td>
+              <td class="fw-semibold">{{ item.quantity_ordered }} units</td>
+              <td>PKR {{ "{:,.2f}".format(item.unit_price) }}</td>
+              <td class="text-end fw-bold">PKR {{ "{:,.2f}".format(item.total_cost) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-3 text-muted">No line items added yet.</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="table-light">
+              <th colspan="4" class="text-end">Grand Total PO Cost:</th>
+              <th class="text-end fs-5 text-primary">PKR {{ "{:,.2f}".format(po.total_amount) }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Add Item Form -->
+    {% if po.order_status != 'Received' %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-plus-circle text-primary me-2"></i>Add Line Item</h6>
+      </div>
+      <div class="card-body p-3">
+        <form method="POST" action="{{ url_for('pharmacy.add_po_item', id=po.id) }}">
+          {{ item_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small">Select Medicine <span class="text-danger">*</span></label>
+            {{ item_form.medicine_id(class="form-select form-select-sm") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Quantity Ordered <span class="text-danger">*</span></label>
+            {{ item_form.quantity_ordered(class="form-control form-control-sm", placeholder="e.g. 500") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small">Unit Purchase Cost (PKR) <span class="text-danger">*</span></label>
+            {{ item_form.unit_price(class="form-control form-control-sm", placeholder="e.g. 15.00") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold"><i class="bi bi-plus me-1"></i>Add Item</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Supplier Details Card -->
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-truck text-primary me-2"></i>Supplier Contact</h6>
+      </div>
+      <div class="content-card-body p-3 small">
+        <div class="fw-bold mb-1">{{ po.supplier.supplier_name }}</div>
+        <div class="text-muted mb-1">Rep: {{ po.supplier.contact_person or 'N/A' }}</div>
+        <div class="text-muted mb-1">Phone: {{ po.supplier.phone }}</div>
+        <div class="text-muted mb-1">Email: {{ po.supplier.email or 'N/A' }}</div>
+        <div class="text-muted">Tax ID: {{ po.supplier.tax_number or 'N/A' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

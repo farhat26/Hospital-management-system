@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Department - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0 text-slate">Edit Department: {{ department.name }}</h3>
+      <a href="{{ url_for('doctors.departments') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Departments
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.code.label.text }} <span class="text-danger">*</span></label>
+            {{ form.code(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.floor_location.label.text }}</label>
+            {{ form.floor_location(class="form-control") }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.description.label.text }}</label>
+            {{ form.description(class="form-control", rows=3) }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <a href="{{ url_for('doctors.departments') }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Update Department</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

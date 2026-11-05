@@ -1,0 +1,308 @@
+:root {
+  --hospital-blue: #0284c7;
+  --hospital-blue-dark: #0369a1;
+  --hospital-blue-light: #e0f2fe;
+  --hospital-teal: #0d9488;
+  --hospital-teal-light: #ccfbf1;
+  --hospital-slate: #0f172a;
+  --hospital-gray-100: #f8fafc;
+  --hospital-gray-200: #e2e8f0;
+  --hospital-gray-300: #cbd5e1;
+  --hospital-gray-600: #475569;
+  --hospital-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --hospital-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar Styling */
+#sidebar-wrapper {
+  min-height: 100vh;
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid var(--hospital-gray-200);
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+#sidebar-wrapper .sidebar-heading {
+  padding: 1.25rem 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--hospital-blue-dark);
+  border-bottom: 1px solid var(--hospital-gray-200);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sidebar-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  padding: 1rem 1.25rem 0.35rem;
+}
+
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: 0.4rem;
+  margin: 0.15rem 0.6rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav-link:hover {
+  color: var(--hospital-blue-dark);
+  background-color: var(--hospital-blue-light);
+}
+
+.sidebar-nav-link.active {
+  color: #ffffff;
+  background-color: var(--hospital-blue);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+}
+
+.sidebar-nav-link i {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+}
+
+/* Top Navbar */
+.top-navbar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--hospital-gray-200);
+  padding: 0.75rem 1.75rem;
+}
+
+/* Main Content Area */
+#page-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Cards & Widgets */
+.stat-card {
+  background: #ffffff;
+  border-radius: 0.85rem;
+  border: 1px solid var(--hospital-gray-200);
+  box-shadow: var(--hospital-card-shadow);
+  padding: 1.4rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--hospital-card-hover);
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.stat-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Content Container Card */
+.content-card {
+  background: #ffffff;
+  border-radius: 0.85rem;
+  border: 1px solid var(--hospital-gray-200);
+  box-shadow: var(--hospital-card-shadow);
+  margin-bottom: 1.5rem;
+}
+
+.content-card-header {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--hospital-gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border-top-left-radius: 0.85rem;
+  border-top-right-radius: 0.85rem;
+}
+
+.content-card-body {
+  padding: 1.4rem;
+}
+
+/* Tables */
+.table-custom {
+  margin-bottom: 0;
+}
+
+.table-custom th {
+  background-color: #f8fafc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid var(--hospital-gray-200);
+  padding: 0.85rem 1rem;
+}
+
+.table-custom td {
+  padding: 0.95rem 1rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table-custom tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Status Badges */
+.badge-status {
+  padding: 0.35em 0.7em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 2rem;
+}
+
+.badge-active {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-deactive {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-completed {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.badge-scheduled {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+/* Modern Form Inputs */
+.form-control, .form-select {
+  border-radius: 0.5rem;
+  border: 1px solid var(--hospital-gray-300);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--hospital-blue);
+  box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.15);
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--hospital-blue);
+  border-color: var(--hospital-blue);
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--hospital-blue-dark);
+  border-color: var(--hospital-blue-dark);
+}
+
+.btn-teal {
+  background-color: var(--hospital-teal);
+  border-color: var(--hospital-teal);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn-teal:hover {
+  background-color: #0f766e;
+  color: #ffffff;
+}
+
+/* Action Button Groups */
+.btn-action-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+}
+
+/* Flash Messages */
+.alert-custom {
+  border-radius: 0.65rem;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+/* Bed Grid visualization */
+.bed-slot-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.bed-slot-card.available {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+.bed-slot-card.occupied {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+}
+.bed-slot-card.maintenance {
+  background-color: #fefce8;
+  border-color: #fde047;
+}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h3 class="fw-bold mb-1 text-slate">{{ title }}</h3>
+        <p class="text-muted small mb-0">Record patient experience, satisfaction score, and qualitative service feedback</p>
+      </div>
+      <a href="{{ url_for('feedback.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Feedback List
+      </a>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.patient_id.label.text }}</label>
+              {{ form.patient_id(class="form-select" + (" is-invalid" if form.patient_id.errors else "")) }}
+              {% for error in form.patient_id.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.visit_id.label.text }}</label>
+              {{ form.visit_id(class="form-select" + (" is-invalid" if form.visit_id.errors else "")) }}
+              {% for error in form.visit_id.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.department_id.label.text }}</label>
+              {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+              {% for error in form.department_id.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.rating.label.text }} <span class="text-danger">*</span></label>
+              {{ form.rating(class="form-select" + (" is-invalid" if form.rating.errors else "")) }}
+              {% for error in form.rating.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.category.label.text }} <span class="text-danger">*</span></label>
+              {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+              {% for error in form.category.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">{{ form.resolution_status.label.text }}</label>
+              {{ form.resolution_status(class="form-select" + (" is-invalid" if form.resolution_status.errors else "")) }}
+              {% for error in form.resolution_status.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-12">
+              <div class="form-check form-switch mt-1">
+                {{ form.is_anonymous(class="form-check-input") }}
+                <label class="form-check-label fw-semibold small" for="is_anonymous">{{ form.is_anonymous.label.text }}</label>
+                <div class="form-text small text-muted">Hides patient identifiable information from general survey reports.</div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.comments.label.text }} <span class="text-danger">*</span></label>
+              {{ form.comments(class="form-control" + (" is-invalid" if form.comments.errors else ""), rows="4", placeholder="Please share specific impressions of care, communication, wait time, or room cleanliness...") }}
+              {% for error in form.comments.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="col-12 mt-4 pt-2 border-top d-flex justify-content-end gap-2">
+              <a href="{{ url_for('feedback.index') }}" class="btn btn-light px-4">Cancel</a>
+              {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

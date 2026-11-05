@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointments Management - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Appointment Management</h3>
+    <p class="text-muted small mb-0">Outpatient scheduling, doctor consultation bookings, and status transitions</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('appointments.queue') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-123 me-1"></i> Live OPD Queue
+    </a>
+    <a href="{{ url_for('appointments.visits') }}" class="btn btn-outline-secondary btn-sm fw-semibold">
+      <i class="bi bi-journal-medical me-1"></i> Clinical Encounters
+    </a>
+    <a href="{{ url_for('appointments.create') }}" class="btn btn-primary btn-sm fw-semibold">
+      <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+    </a>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="content-card mb-4">
+  <div class="content-card-body p-3">
+    <form method="GET" action="{{ url_for('appointments.index') }}" class="row g-2 align-items-center">
+      <div class="col-md-3">
+        <select name="status" class="form-select">
+          <option value="">-- All Statuses --</option>
+          {% for st in ['Scheduled', 'Confirmed', 'Completed', 'Cancelled', 'No-Show'] %}
+          <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select name="doctor_id" class="form-select">
+          <option value="">-- Filter by Doctor --</option>
+          {% for doc in doctors %}
+          <option value="{{ doc.id }}" {% if selected_doctor == doc.id %}selected{% endif %}>{{ doc.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+        {% if selected_status or selected_doctor or selected_date %}
+        <a href="{{ url_for('appointments.index') }}" class="btn btn-light btn-sm"><i class="bi bi-x-circle"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="content-card">
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>Appt #</th>
+          <th>Patient</th>
+          <th>Doctor</th>
+          <th>Department</th>
+          <th>Date & Time</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td class="fw-bold"><a href="{{ url_for('appointments.view', id=a.id) }}">{{ a.appointment_number }}</a></td>
+          <td>
+            <div class="fw-semibold">{{ a.patient.full_name }}</div>
+            <small class="text-muted">{{ a.patient.patient_code }}</small>
+          </td>
+          <td>{{ a.doctor.full_name }}</td>
+          <td><span class="badge bg-light text-dark border">{{ a.department.name }}</span></td>
+          <td>
+            <div class="fw-medium">{{ a.appointment_date.strftime('%b %d, %Y') }}</div>
+            <small class="text-muted">{{ a.appointment_time.strftime('%H:%M') }}</small>
+          </td>
+          <td>{{ a.appointment_type }}</td>
+          <td>
+            <span class="badge badge-status 
+              {% if a.current_status == 'Confirmed' %}badge-active
+              {% elif a.current_status == 'Scheduled' %}badge-scheduled
+              {% elif a.current_status == 'Completed' %}badge-completed
+              {% else %}badge-deactive{% endif %}">
+              {{ a.current_status }}
+            </span>
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('appointments.view', id=a.id) }}" class="btn btn-outline-secondary btn-action-icon" title="View">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{{ url_for('appointments.edit', id=a.id) }}" class="btn btn-outline-primary btn-action-icon" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button type="button" class="btn btn-outline-danger btn-action-icon" data-bs-toggle="modal" data-bs-target="#softDeleteModal" data-delete-url="{{ url_for('appointments.delete', id=a.id) }}" data-record-name="{{ a.appointment_number }}" title="Soft Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center py-4 text-muted">No appointments found matching filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+    <div class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} appointments)</div>
+    <ul class="pagination pagination-sm mb-0">
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('appointments.index', page=pagination.prev_num, status=selected_status, doctor_id=selected_doctor, date=selected_date) }}">Previous</a></li>
+      {% endif %}
+      <li class="page-item active"><span class="page-link">{{ pagination.page }}</span></li>
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('appointments.index', page=pagination.next_num, status=selected_status, doctor_id=selected_doctor, date=selected_date) }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

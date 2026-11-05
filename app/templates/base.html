@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="{{ theme }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{% block title %}Hospital Management System{% endblock %} - HMS Pro</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Hospital Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="d-flex" id="wrapper">
+  <!-- Sidebar -->
+  {% if current_user.is_authenticated %}
+  <div id="sidebar-wrapper">
+    <div class="sidebar-heading">
+      <i class="bi bi-hospital text-primary fs-3"></i>
+      <div>
+        <div class="lh-1">HMS <span class="text-primary">PRO</span></div>
+        <small class="text-muted fw-normal" style="font-size: 0.65rem;">Academic Hospital Suite</small>
+      </div>
+    </div>
+    
+    <div class="overflow-y-auto" style="max-height: calc(100vh - 75px);">
+      {% set role = current_user.role.name if current_user.role else 'Admin' %}
+
+      <div class="sidebar-category">Overview</div>
+      <a href="{{ url_for('dashboard.index') }}" class="sidebar-nav-link {% if request.blueprint == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> {{ role }} Dashboard
+      </a>
+
+      {# ========================== 1. ADMIN MENU ========================== #}
+      {% if role == 'Admin' %}
+      <div class="sidebar-category">Clinical Modules</div>
+      <a href="{{ url_for('patients.index') }}" class="sidebar-nav-link {% if request.blueprint == 'patients' and request.endpoint in ['patients.index', 'patients.view', 'patients.create', 'patients.edit'] %}active{% endif %}">
+        <i class="bi bi-people"></i> Patients
+      </a>
+      <a href="{{ url_for('patients.allergies') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.allergies' %}active{% endif %}">
+        <i class="bi bi-shield-slash"></i> Allergies Catalog
+      </a>
+      <a href="{{ url_for('patients.diagnoses') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.diagnoses' %}active{% endif %}">
+        <i class="bi bi-clipboard2-pulse"></i> ICD Diagnoses
+      </a>
+      <a href="{{ url_for('appointments.index') }}" class="sidebar-nav-link {% if request.blueprint == 'appointments' and request.endpoint in ['appointments.index', 'appointments.view', 'appointments.create'] %}active{% endif %}">
+        <i class="bi bi-calendar-check"></i> Appointments
+      </a>
+      <a href="{{ url_for('appointments.queue') }}" class="sidebar-nav-link {% if request.endpoint == 'appointments.queue' %}active{% endif %}">
+        <i class="bi bi-123"></i> OPD Queue Tokens
+      </a>
+      <a href="{{ url_for('appointments.visits') }}" class="sidebar-nav-link {% if request.endpoint in ['appointments.visits', 'appointments.view_visit', 'appointments.create_visit'] %}active{% endif %}">
+        <i class="bi bi-journal-medical"></i> Encounters / Visits
+      </a>
+
+      <div class="sidebar-category">Medical Staff & HR</div>
+      <a href="{{ url_for('doctors.index') }}" class="sidebar-nav-link {% if request.blueprint == 'doctors' and request.endpoint in ['doctors.index', 'doctors.view', 'doctors.create'] %}active{% endif %}">
+        <i class="bi bi-heart-pulse"></i> Doctors
+      </a>
+      <a href="{{ url_for('doctors.departments') }}" class="sidebar-nav-link {% if request.endpoint == 'doctors.departments' %}active{% endif %}">
+        <i class="bi bi-diagram-3"></i> Departments
+      </a>
+      <a href="{{ url_for('staff.index') }}" class="sidebar-nav-link {% if request.blueprint == 'staff' and request.endpoint == 'staff.index' %}active{% endif %}">
+        <i class="bi bi-person-badge"></i> Nurses & Staff
+      </a>
+      <a href="{{ url_for('staff.shifts') }}" class="sidebar-nav-link {% if request.endpoint == 'staff.shifts' %}active{% endif %}">
+        <i class="bi bi-clock-history"></i> Duty Shifts
+      </a>
+      <a href="{{ url_for('staff.attendance') }}" class="sidebar-nav-link {% if request.endpoint == 'staff.attendance' %}active{% endif %}">
+        <i class="bi bi-calendar2-check"></i> Staff Attendance
+      </a>
+
+      <div class="sidebar-category">Pharmacy & Diagnostics</div>
+      <a href="{{ url_for('pharmacy.index') }}" class="sidebar-nav-link {% if request.blueprint == 'pharmacy' and request.endpoint in ['pharmacy.index', 'pharmacy.view_medicine', 'pharmacy.create_medicine'] %}active{% endif %}">
+        <i class="bi bi-capsule"></i> Medicines & Stock
+      </a>
+      <a href="{{ url_for('pharmacy.prescriptions') }}" class="sidebar-nav-link {% if request.endpoint in ['pharmacy.prescriptions', 'pharmacy.view_prescription', 'pharmacy.create_prescription'] %}active{% endif %}">
+        <i class="bi bi-prescription2"></i> Prescriptions
+      </a>
+      <a href="{{ url_for('pharmacy.suppliers') }}" class="sidebar-nav-link {% if request.endpoint == 'pharmacy.suppliers' %}active{% endif %}">
+        <i class="bi bi-truck"></i> Suppliers
+      </a>
+      <a href="{{ url_for('pharmacy.purchase_orders') }}" class="sidebar-nav-link {% if request.endpoint in ['pharmacy.purchase_orders', 'pharmacy.view_purchase_order', 'pharmacy.create_purchase_order'] %}active{% endif %}">
+        <i class="bi bi-cart-check"></i> Purchase Orders
+      </a>
+      <a href="{{ url_for('pharmacy.sales') }}" class="sidebar-nav-link {% if request.endpoint in ['pharmacy.sales', 'pharmacy.view_sale', 'pharmacy.create_sale'] %}active{% endif %}">
+        <i class="bi bi-receipt-cutoff"></i> POS Counter Sales
+      </a>
+      <a href="{{ url_for('laboratory.index') }}" class="sidebar-nav-link {% if request.blueprint == 'laboratory' and request.endpoint in ['laboratory.index', 'laboratory.view_order', 'laboratory.create_order'] %}active{% endif %}">
+        <i class="bi bi-eyedropper"></i> Lab Requisitions
+      </a>
+      <a href="{{ url_for('laboratory.tests') }}" class="sidebar-nav-link {% if request.endpoint == 'laboratory.tests' %}active{% endif %}">
+        <i class="bi bi-clipboard2-data"></i> Lab Tests Catalog
+      </a>
+
+      <div class="sidebar-category">Inpatient & Operations</div>
+      <a href="{{ url_for('wards.index') }}" class="sidebar-nav-link {% if request.blueprint == 'wards' and request.endpoint == 'wards.index' %}active{% endif %}">
+        <i class="bi bi-hospital-fill"></i> Wards & Bed Grid
+      </a>
+      <a href="{{ url_for('wards.admissions') }}" class="sidebar-nav-link {% if request.endpoint in ['wards.admissions', 'wards.view_admission', 'wards.create_admission'] %}active{% endif %}">
+        <i class="bi bi-box-arrow-in-right"></i> Inpatient Admissions
+      </a>
+      <a href="{{ url_for('billing.index') }}" class="sidebar-nav-link {% if request.blueprint == 'billing' and request.endpoint in ['billing.index', 'billing.view_invoice', 'billing.create_invoice'] %}active{% endif %}">
+        <i class="bi bi-credit-card"></i> Invoices & Billing
+      </a>
+      <a href="{{ url_for('billing.insurance') }}" class="sidebar-nav-link {% if request.endpoint == 'billing.insurance' %}active{% endif %}">
+        <i class="bi bi-shield-check"></i> Insurance Claims
+      </a>
+      <a href="{{ url_for('surgery.index') }}" class="sidebar-nav-link {% if request.blueprint == 'surgery' %}active{% endif %}">
+        <i class="bi bi-scissors"></i> Surgery & Theatres
+      </a>
+      <a href="{{ url_for('feedback.index') }}" class="sidebar-nav-link {% if request.blueprint == 'feedback' %}active{% endif %}">
+        <i class="bi bi-chat-heart"></i> Patient Feedback
+      </a>
+
+      <div class="sidebar-category">Administration</div>
+      <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+        <i class="bi bi-person-gear"></i> User Accounts
+      </a>
+      <a href="{{ url_for('admin.audit_logs') }}" class="sidebar-nav-link {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+        <i class="bi bi-journal-text"></i> System Audit Logs
+      </a>
+      <a href="{{ url_for('admin.login_history') }}" class="sidebar-nav-link {% if request.endpoint == 'admin.login_history' %}active{% endif %}">
+        <i class="bi bi-shield-lock"></i> Login History
+      </a>
+      <a href="{{ url_for('admin.recycle_bin') }}" class="sidebar-nav-link text-danger {% if request.endpoint == 'admin.recycle_bin' %}active bg-danger text-white{% endif %}">
+        <i class="bi bi-trash3"></i> Recycle Bin
+        {% if recycle_bin_count > 0 %}
+        <span class="badge bg-danger rounded-pill ms-auto">{{ recycle_bin_count }}</span>
+        {% endif %}
+      </a>
+
+      {# ========================== 2. DOCTOR MENU ========================== #}
+      {% elif role == 'Doctor' %}
+      <div class="sidebar-category">Clinical Practice</div>
+      <a href="{{ url_for('appointments.index') }}" class="sidebar-nav-link {% if request.blueprint == 'appointments' and request.endpoint == 'appointments.index' %}active{% endif %}">
+        <i class="bi bi-calendar-check"></i> My Appointments
+      </a>
+      <a href="{{ url_for('appointments.queue') }}" class="sidebar-nav-link {% if request.endpoint == 'appointments.queue' %}active{% endif %}">
+        <i class="bi bi-123"></i> OPD Queue Tokens
+      </a>
+      <a href="{{ url_for('appointments.visits') }}" class="sidebar-nav-link {% if request.blueprint == 'appointments' and 'visit' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-journal-medical"></i> Clinical Encounters
+      </a>
+      <a href="{{ url_for('patients.index') }}" class="sidebar-nav-link {% if request.blueprint == 'patients' and request.endpoint in ['patients.index', 'patients.view'] %}active{% endif %}">
+        <i class="bi bi-people"></i> Assigned Patients
+      </a>
+      <a href="{{ url_for('patients.diagnoses') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.diagnoses' %}active{% endif %}">
+        <i class="bi bi-clipboard2-pulse"></i> ICD Diagnoses
+      </a>
+      <a href="{{ url_for('patients.allergies') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.allergies' %}active{% endif %}">
+        <i class="bi bi-shield-slash"></i> Allergies Catalog
+      </a>
+
+      <div class="sidebar-category">Medical Orders</div>
+      <a href="{{ url_for('pharmacy.prescriptions') }}" class="sidebar-nav-link {% if request.blueprint == 'pharmacy' %}active{% endif %}">
+        <i class="bi bi-prescription2"></i> Digital Prescriptions
+      </a>
+      <a href="{{ url_for('laboratory.index') }}" class="sidebar-nav-link {% if request.blueprint == 'laboratory' %}active{% endif %}">
+        <i class="bi bi-eyedropper"></i> Lab Requisitions
+      </a>
+      <a href="{{ url_for('surgery.index') }}" class="sidebar-nav-link {% if request.blueprint == 'surgery' %}active{% endif %}">
+        <i class="bi bi-scissors"></i> Surgery Schedules
+      </a>
+
+      {# ========================== 3. RECEPTIONIST MENU ========================== #}
+      {% elif role == 'Receptionist' %}
+      <div class="sidebar-category">Front Desk & Registration</div>
+      <a href="{{ url_for('patients.create') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.create' %}active{% endif %}">
+        <i class="bi bi-person-plus"></i> Register Patient
+      </a>
+      <a href="{{ url_for('patients.index') }}" class="sidebar-nav-link {% if request.blueprint == 'patients' and request.endpoint != 'patients.create' %}active{% endif %}">
+        <i class="bi bi-people"></i> Patient Directory
+      </a>
+      <a href="{{ url_for('appointments.index') }}" class="sidebar-nav-link {% if request.blueprint == 'appointments' and request.endpoint != 'appointments.queue' %}active{% endif %}">
+        <i class="bi bi-calendar-check"></i> Appointments Desk
+      </a>
+      <a href="{{ url_for('appointments.queue') }}" class="sidebar-nav-link {% if request.endpoint == 'appointments.queue' %}active{% endif %}">
+        <i class="bi bi-123"></i> OPD Queue Tokens
+      </a>
+      <a href="{{ url_for('wards.admissions') }}" class="sidebar-nav-link {% if request.blueprint == 'wards' %}active{% endif %}">
+        <i class="bi bi-box-arrow-in-right"></i> Inpatient Admissions
+      </a>
+
+      <div class="sidebar-category">Billing & Insurance</div>
+      <a href="{{ url_for('billing.index') }}" class="sidebar-nav-link {% if request.blueprint == 'billing' and request.endpoint != 'billing.insurance' %}active{% endif %}">
+        <i class="bi bi-credit-card"></i> Invoices & Cashier
+      </a>
+      <a href="{{ url_for('billing.insurance') }}" class="sidebar-nav-link {% if request.endpoint == 'billing.insurance' %}active{% endif %}">
+        <i class="bi bi-shield-check"></i> Insurance Claims
+      </a>
+      <a href="{{ url_for('doctors.index') }}" class="sidebar-nav-link {% if request.blueprint == 'doctors' %}active{% endif %}">
+        <i class="bi bi-heart-pulse"></i> Doctor Directory
+      </a>
+
+      {# ========================== 4. NURSE MENU ========================== #}
+      {% elif role == 'Nurse' %}
+      <div class="sidebar-category">Inpatient Care</div>
+      <a href="{{ url_for('wards.index') }}" class="sidebar-nav-link {% if request.blueprint == 'wards' and request.endpoint == 'wards.index' %}active{% endif %}">
+        <i class="bi bi-hospital-fill"></i> Ward Bed Grid
+      </a>
+      <a href="{{ url_for('wards.admissions') }}" class="sidebar-nav-link {% if request.endpoint in ['wards.admissions', 'wards.view_admission', 'wards.create_admission'] %}active{% endif %}">
+        <i class="bi bi-box-arrow-in-right"></i> Inpatient Admissions
+      </a>
+      <a href="{{ url_for('appointments.visits') }}" class="sidebar-nav-link {% if request.blueprint == 'appointments' %}active{% endif %}">
+        <i class="bi bi-heart-pulse"></i> Patient Vitals Checks
+      </a>
+      <a href="{{ url_for('patients.allergies') }}" class="sidebar-nav-link {% if request.endpoint == 'patients.allergies' %}active{% endif %}">
+        <i class="bi bi-shield-slash"></i> Allergies Catalog
+      </a>
+      <a href="{{ url_for('patients.index') }}" class="sidebar-nav-link {% if request.blueprint == 'patients' and request.endpoint in ['patients.index', 'patients.view'] %}active{% endif %}">
+        <i class="bi bi-people"></i> Inpatient Records
+      </a>
+
+      <div class="sidebar-category">Roster & Shifts</div>
+      <a href="{{ url_for('staff.shifts') }}" class="sidebar-nav-link {% if request.endpoint == 'staff.shifts' %}active{% endif %}">
+        <i class="bi bi-clock-history"></i> Duty Shifts
+      </a>
+      <a href="{{ url_for('staff.attendance') }}" class="sidebar-nav-link {% if request.endpoint == 'staff.attendance' %}active{% endif %}">
+        <i class="bi bi-calendar2-check"></i> Staff Attendance
+      </a>
+
+      {# ========================== 5. PHARMACIST MENU ========================== #}
+      {% elif role == 'Pharmacist' %}
+      <div class="sidebar-category">Pharmacy Operations</div>
+      <a href="{{ url_for('pharmacy.sales') }}" class="sidebar-nav-link {% if request.endpoint in ['pharmacy.sales', 'pharmacy.create_sale', 'pharmacy.view_sale'] %}active{% endif %}">
+        <i class="bi bi-receipt-cutoff"></i> POS Counter Sales
+      </a>
+      <a href="{{ url_for('pharmacy.index') }}" class="sidebar-nav-link {% if request.blueprint == 'pharmacy' and request.endpoint in ['pharmacy.index', 'pharmacy.view_medicine', 'pharmacy.create_medicine'] %}active{% endif %}">
+        <i class="bi bi-capsule"></i> Medicines & Stock
+      </a>
+      <a href="{{ url_for('pharmacy.prescriptions') }}" class="sidebar-nav-link {% if 'prescription' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-prescription2"></i> Doctor Prescriptions
+      </a>
+      <a href="{{ url_for('pharmacy.categories') }}" class="sidebar-nav-link {% if request.endpoint == 'pharmacy.categories' %}active{% endif %}">
+        <i class="bi bi-tags"></i> Drug Categories
+      </a>
+      <a href="{{ url_for('pharmacy.suppliers') }}" class="sidebar-nav-link {% if request.endpoint == 'pharmacy.suppliers' %}active{% endif %}">
+        <i class="bi bi-truck"></i> Suppliers
+      </a>
+      <a href="{{ url_for('pharmacy.purchase_orders') }}" class="sidebar-nav-link {% if 'purchase_order' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-cart-check"></i> Purchase Orders
+      </a>
+
+      {# ========================== 6. LAB TECH MENU ========================== #}
+      {% elif role == 'Laboratory Technician' %}
+      <div class="sidebar-category">Diagnostic Laboratory</div>
+      <a href="{{ url_for('laboratory.index') }}" class="sidebar-nav-link {% if request.blueprint == 'laboratory' and request.endpoint in ['laboratory.index', 'laboratory.view_order', 'laboratory.create_order'] %}active{% endif %}">
+        <i class="bi bi-eyedropper"></i> Lab Requisitions
+      </a>
+      <a href="{{ url_for('laboratory.tests') }}" class="sidebar-nav-link {% if request.endpoint == 'laboratory.tests' %}active{% endif %}">
+        <i class="bi bi-clipboard2-data"></i> Diagnostic Test Catalog
+      </a>
+      {% endif %}
+
+      <div class="p-3 text-center text-muted" style="font-size: 0.75rem;">
+        <div>56 Connected Database Tables</div>
+        <div>Role: <span class="badge bg-primary-subtle text-primary border">{{ role }}</span></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Page Content -->
+  <div id="page-content-wrapper" class="d-flex flex-column">
+    <!-- Top Navbar -->
+    {% if current_user.is_authenticated %}
+    <nav class="top-navbar d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-outline-secondary btn-sm" id="sidebarToggle" title="Toggle Sidebar">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 fw-semibold d-none d-md-inline-block">
+          <i class="bi bi-database me-1"></i> {{ total_models_count }} Active ORM Models
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        {% if current_user.has_role('Admin') and recycle_bin_count > 0 %}
+        <a href="{{ url_for('admin.recycle_bin') }}" class="btn btn-sm btn-outline-danger" title="Soft-deleted items in Recycle Bin">
+          <i class="bi bi-trash3 me-1"></i> Recycle Bin ({{ recycle_bin_count }})
+        </a>
+        {% endif %}
+
+        <div class="dropdown">
+          <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.85rem; font-weight: 700;">
+              {{ current_user.username[0]|upper }}
+            </div>
+            <div class="text-start d-none d-sm-block">
+              <div class="fw-bold lh-1" style="font-size: 0.85rem;">{{ current_user.profile.full_name if current_user.profile else current_user.username }}</div>
+              <span class="badge bg-info-subtle text-info-emphasis" style="font-size: 0.68rem;">{{ current_user.role.name if current_user.role else 'User' }}</span>
+            </div>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><h6 class="dropdown-header">Signed in as <strong>{{ current_user.username }}</strong></h6></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+            {% if current_user.has_role('Admin') %}
+            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}"><i class="bi bi-gear me-2"></i> System Administration</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{{ url_for('preferences.set_theme', mode='dark' if theme == 'light' else 'light') }}" class="px-3 py-1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+                  <i class="bi bi-{{ 'moon' if theme == 'light' else 'sun' }} me-1"></i> {{ 'Dark' if theme == 'light' else 'Light' }} mode
+                </button>
+              </form>
+            </li>
+            {% if recent_pages %}
+            <li><hr class="dropdown-divider"></li>
+            <li><h6 class="dropdown-header">Recently visited ({{ page_views }} views this session)</h6></li>
+            {% for page in recent_pages %}
+            <li><a class="dropdown-item small" href="{{ page.url }}"><i class="bi bi-clock-history me-2"></i>{{ page.label }}</a></li>
+            {% endfor %}
+            <li>
+              <form method="post" action="{{ url_for('preferences.clear_recent') }}" class="px-3 py-1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-link btn-sm text-muted p-0">Clear list</button>
+              </form>
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Container -->
+    <main class="flex-grow-1 p-3 p-md-4">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show alert-custom mb-4" role="alert">
+              <div class="d-flex align-items-center gap-2">
+                {% if category == 'success' %}
+                  <i class="bi bi-check-circle-fill fs-5"></i>
+                {% elif category == 'danger' %}
+                  <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                {% elif category == 'warning' %}
+                  <i class="bi bi-exclamation-circle-fill fs-5"></i>
+                {% else %}
+                  <i class="bi bi-info-circle-fill fs-5"></i>
+                {% endif %}
+                <div>{{ message }}</div>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Template Page Content -->
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-3 px-4 text-center text-muted" style="font-size: 0.8rem;">
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+        <div>
+          Hospital Management System &bull; University Semester Project (Web Engineering)
+        </div>
+        <div>
+          <span>56 Related Tables &bull; Soft-Delete Enabled &bull; SQLAlchemy ORM &bull; CSRF Protected</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- Global Soft Delete Confirmation Modal -->
+<div class="modal fade" id="softDeleteModal" tabindex="-1" aria-labelledby="softDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="softDeleteForm" method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header bg-danger-subtle text-danger">
+          <h5 class="modal-title" id="softDeleteModalLabel"><i class="bi bi-trash3 me-2"></i>Confirm Soft Deletion</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Are you sure you want to move <strong id="deleteRecordName">this record</strong> to the Recycle Bin?</p>
+          <div class="alert alert-warning py-2 mb-0" style="font-size: 0.85rem;">
+            <i class="bi bi-info-circle me-1"></i> The record will be hidden from operational lists but can be safely restored anytime by administrators from the Recycle Bin.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash3 me-1"></i>Soft Delete Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<!-- HMS Main JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

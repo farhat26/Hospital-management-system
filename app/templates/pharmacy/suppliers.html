@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendors & Pharmaceutical Suppliers - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+  <div>
+    <h3 class="fw-bold mb-1 text-slate">Pharmaceutical Suppliers & Vendors</h3>
+    <p class="text-muted small mb-0">Authorized medical manufacturers, equipment distributors, and vendor records</p>
+  </div>
+  <a href="{{ url_for('pharmacy.purchase_orders') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+    <i class="bi bi-cart-check me-1"></i> Purchase Orders
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="fw-bold mb-0 text-slate"><i class="bi bi-truck text-primary me-2"></i>Register Supplier</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('pharmacy.suppliers') }}">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.supplier_name.label.text }} <span class="text-danger">*</span></label>
+            {{ form.supplier_name(class="form-control", placeholder="e.g. Medix Pharma") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.contact_person.label.text }}</label>
+            {{ form.contact_person(class="form-control", placeholder="Contact representative") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.phone.label.text }} <span class="text-danger">*</span></label>
+            {{ form.phone(class="form-control", placeholder="+92 51 1234567") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.email.label.text }}</label>
+            {{ form.email(class="form-control", placeholder="orders@vendor.com") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.tax_number.label.text }}</label>
+            {{ form.tax_number(class="form-control", placeholder="NTN / Tax #") }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">{{ form.address.label.text }}</label>
+            {{ form.address(class="form-control", placeholder="Street, Industrial Area, City") }}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="bi bi-save me-1"></i>Save Supplier</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="content-card">
+      <div class="content-card-header">
+        <h6 class="fw-bold mb-0 text-slate"><i class="bi bi-building text-primary me-2"></i>Active Suppliers ({{ suppliers|length }})</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Supplier Name</th>
+              <th>Contact Person</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Tax / NTN</th>
+              <th>POs</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in suppliers %}
+            <tr>
+              <td class="fw-bold text-slate">{{ s.supplier_name }}</td>
+              <td>{{ s.contact_person or '-' }}</td>
+              <td>{{ s.phone }}</td>
+              <td>{{ s.email or '-' }}</td>
+              <td><code>{{ s.tax_number or '-' }}</code></td>
+              <td><span class="badge bg-light text-dark border">{{ s.purchase_orders.count() }} Orders</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No suppliers registered.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0 text-slate">{{ title }}</h3>
+      <a href="{{ url_for('wards.admissions') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Admissions
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.admission_number.label.text }} <span class="text-danger">*</span></label>
+              {{ form.admission_number(class="form-control" + (" is-invalid" if form.admission_number.errors else "")) }}
+              {% for error in form.admission_number.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">{{ form.admission_type.label.text }} <span class="text-danger">*</span></label>
+              {{ form.admission_type(class="form-select") }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">{{ form.patient_id.label.text }} <span class="text-danger">*</span></label>
+              {{ form.patient_id(class="form-select") }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">{{ form.doctor_id.label.text }} <span class="text-danger">*</span></label>
+              {{ form.doctor_id(class="form-select") }}
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">{{ form.bed_id.label.text }} <span class="text-danger">*</span></label>
+              {{ form.bed_id(class="form-select") }}
+              <small class="text-muted">Only sanitized, currently available beds are listed above.</small>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">{{ form.reason_for_admission.label.text }} <span class="text-danger">*</span></label>
+              {{ form.reason_for_admission(class="form-control", rows=3, placeholder="Clinical diagnosis and indication for inpatient admission stay") }}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <a href="{{ url_for('wards.admissions') }}" class="btn btn-light">Cancel</a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold"><i class="bi bi-box-arrow-in-right me-1"></i>Admit Patient</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
